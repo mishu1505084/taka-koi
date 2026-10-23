@@ -11,6 +11,13 @@
 <meta name="apple-mobile-web-app-title" content="Taka Koi?">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23E7B43E'/%3E%3Ccircle cx='16' cy='16' r='11.2' fill='none' stroke='%233A2A00' stroke-opacity='.55'/%3E%3Ctext x='16' y='21.6' text-anchor='middle' font-size='15' font-weight='700' fill='%233A2A00'%3E%E0%A7%B3%3C/text%3E%3C/svg%3E">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* Email login: paste the Firebase web config here (Project settings > Your apps). Leave null to run without accounts. */
+window.TAKA_FIREBASE = null;
+</script>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -214,6 +221,8 @@ button.li:hover{background:var(--sunk)}
 .menu svg{width:20px;height:20px}
 .menu.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .menu i{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--bad);border:2px solid var(--surface)}
+.acctbtn{flex:none;border:1px solid var(--accent);background:var(--surface);color:var(--accent);border-radius:999px;padding:7px 12px;font-weight:600;font-size:13px;white-space:nowrap}
+.acctbtn.me{width:36px;height:36px;padding:0;background:var(--accent);color:var(--accent-ink);font-family:var(--f-display);font-size:16px}
 .worknote{display:flex;gap:12px;align-items:center;margin-top:12px;padding:11px 14px;border-radius:14px;background:var(--surface);border:1px dashed var(--line);width:100%;text-align:left;font-size:14px;line-height:1.35}
 .worknote>.clock{font-size:22px;flex:none}
 button.worknote:hover{border-color:var(--accent)}
@@ -283,7 +292,7 @@ const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 /* ---------- state ---------- */
 let S = null;            // { meta, tx: { "YYYY-MM": [tx] } }
 let mode = "example";    // example | live
-let store = "pending";   // pending | db | local
+let store = "pending";   // pending | db (Claude) | cloud (email login) | local
 let syncState = "idle";  // idle | busy | err
 const ui = { tab: "budget", accView: "accounts", tf: { acct: "", month: "", type: "" }, month: CUR, acct: null, report: "spending", q: "", limit: 150, collapsed: new Set(JSON.parse(lsGet("et-collapsed") || "[]")) };
 
@@ -447,6 +456,9 @@ function ageOfMoney() {
 
 /* ---------- persistence ---------- */
 let DB = null, UID = null, unsub = null, pendingSnap = null, knownDocs = new Set(), gotFirst = false;
+let docRef = k => DB.doc("data/users/" + UID + "/" + k);
+/* email login (hosted site only): Firebase Auth + Firestore, enabled when window.TAKA_FIREBASE holds a config */
+let AUTH = null, FS = null, USER = null, uploadedLocal = false;
 const dirty = new Set(); let flushTimer = null, flushing = false;
 
 function markDirty(...keys) {
@@ -456,24 +468,26 @@ function markDirty(...keys) {
   syncState = "busy"; renderTop();
 }
 async function flush() {
-  if (flushing || store === "pending" || (store === "db" && !gotFirst)) { flushTimer = setTimeout(flush, 300); return; }
+  if (flushing || store === "pending" || ((store === "db" || store === "cloud") && !gotFirst)) { flushTimer = setTimeout(flush, 300); return; }
   if (store === "local") {
     lsSet("et-data", JSON.stringify(S)); dirty.clear(); syncState = "idle"; renderTop(); return;
   }
-  flushing = true;
+  flushing = true; let k = null;
   try {
     while (dirty.size) {
-      const k = dirty.values().next().value; dirty.delete(k);
-      const ref = DB.doc("data/users/" + UID + "/" + k);
+      k = dirty.values().next().value; dirty.delete(k);
+      const ref = docRef(k);
       if (k === "meta") await ref.set({ ...S.meta, updated: Date.now() });
       else {
         const items = S.tx[k.slice(3)];
         if (items && items.length) await ref.set({ items }); else { await ref.delete(); delete S.tx[k.slice(3)]; }
       }
-      knownDocs.add(k);
+      knownDocs.add(k); k = null;
     }
     syncState = "idle";
+    if (uploadedLocal) { uploadedLocal = false; try { localStorage.removeItem("et-data"); } catch (e) {} toast("Your budget is now saved to your account"); }
   } catch (e) {
+    if (k) dirty.add(k);
     syncState = "err";
     toast(e && e.code === "quota_exceeded" ? "Storage is full. Export a backup and remove old months." : "Couldn't save. Your changes will retry on the next edit.");
   }
@@ -481,7 +495,7 @@ async function flush() {
   if (!dirty.size && pendingSnap) { const s = pendingSnap; pendingSnap = null; applySnap(s); }
 }
 function applySnap(snap) {
-  if (!gotFirst) { gotFirst = true; if (snap.docs.some(d => d.id === "meta")) { dirty.clear(); clearTimeout(flushTimer); syncState = "idle"; } else if (dirty.size) { flushTimer = setTimeout(flush, 50); } }
+  if (!gotFirst) { gotFirst = true; if (snap.docs.some(d => d.id === "meta")) { dirty.clear(); clearTimeout(flushTimer); syncState = "idle"; } else if (store === "cloud" && mode === "live") { ["meta", ...Object.keys(S.tx).map(m => "tx-" + m)].forEach(x => dirty.add(x)); uploadedLocal = true; flushTimer = setTimeout(flush, 50); } else if (dirty.size) { flushTimer = setTimeout(flush, 50); } }
   if (dirty.size || flushing) { pendingSnap = snap; return; }
   const meta = snap.docs.find(d => d.id === "meta");
   knownDocs = new Set(snap.docs.map(d => d.id));
@@ -499,13 +513,42 @@ async function connect() {
   if (db && uid) {
     DB = db; UID = uid; store = "db";
     unsub = db.collection("data/users/" + uid).onSnapshot(applySnap, () => { syncState = "err"; renderTop(); });
+  } else if (window.firebase && window.TAKA_FIREBASE && window.TAKA_FIREBASE.apiKey) {
+    try {
+      firebase.initializeApp(window.TAKA_FIREBASE);
+      AUTH = firebase.auth(); FS = firebase.firestore();
+      loadLocal(); store = "local"; render();
+      AUTH.onAuthStateChanged(u => { if (u) startCloud(u); else stopCloud(); });
+    } catch (e) { AUTH = null; loadLocal(); store = "local"; render(); }
   } else {
-    store = "local";
-    const raw = lsGet("et-data");
-    if (raw) { try { S = JSON.parse(raw); mode = "live"; } catch (e) {} }
-    render();
+    store = "local"; loadLocal(); render();
   }
   renderTop();
+}
+function loadLocal() {
+  const raw = lsGet("et-data");
+  if (raw) { try { S = JSON.parse(raw); mode = "live"; return; } catch (e) {} }
+  S = example(); mode = "example";
+}
+function startCloud(u) {
+  if (USER && USER.uid === u.uid && store === "cloud") { USER = u; render(); return; }
+  if (store === "local" && dirty.size) { lsSet("et-data", JSON.stringify(S)); dirty.clear(); }
+  clearTimeout(flushTimer);
+  USER = u; UID = u.uid; store = "cloud"; gotFirst = false; knownDocs = new Set(); pendingSnap = null; syncState = "busy";
+  docRef = k => FS.doc("takakoi/" + UID + "/data/" + k);
+  if (unsub) unsub();
+  unsub = FS.collection("takakoi/" + UID + "/data").onSnapshot({ includeMetadataChanges: true }, snap => {
+    if (!gotFirst && snap.metadata.fromCache) return;   /* wait for the server before deciding the account is empty */
+    if (syncState === "busy" && !dirty.size && !flushing) syncState = "idle";
+    applySnap(snap);
+  }, () => { syncState = "err"; renderTop(); toast("Couldn't reach your account. Check your connection."); });
+  render();
+}
+function stopCloud() {
+  if (store !== "cloud") { USER = null; render(); return; }
+  if (unsub) unsub(); unsub = null;
+  USER = null; UID = null; store = "local"; gotFirst = false; dirty.clear(); pendingSnap = null; syncState = "idle";
+  loadLocal(); render();
 }
 function replaceAll(next) {
   const old = new Set(Object.keys(S.tx).map(m => "tx-" + m));
@@ -544,11 +587,12 @@ function renderTop() {
   if (mode === "example") { st = "Example"; }
   else if (syncState === "busy") { sc = "busy"; st = "Saving"; }
   else if (syncState === "err") { sc = "err"; st = "Not saved"; }
-  else if (store === "db") { sc = "ok"; st = "Synced"; }
+  else if (store === "db" || store === "cloud") { sc = "ok"; st = "Synced"; }
   else if (store === "local") { sc = "ok"; st = "This browser"; }
   else { st = "Loading"; }
   $("#top").innerHTML = `<button class="menu ${ui.tab === "more" ? "on" : ""}" data-tab="more" aria-label="More: settings, categories, backup" title="More">${ICONS.more}${syncState === "err" ? "<i></i>" : ""}</button><div class="brand">${COIN}<span>Taka Koi<em>?</em></span></div>
-    ${showMonth ? `<div class="month"><button data-act="mprev" aria-label="Previous month">‹</button><span>${mLabel(ui.month)}</span><button data-act="mnext" aria-label="Next month">›</button></div>` : ""}`;
+    ${showMonth ? `<div class="month"><button data-act="mprev" aria-label="Previous month">‹</button><span>${mLabel(ui.month)}</span><button data-act="mnext" aria-label="Next month">›</button></div>` : ""}
+    ${AUTH ? (USER ? `<button class="acctbtn me" data-act="account" aria-label="Account: ${esc(USER.email || "")}" title="${esc(USER.email || "")}">${esc((USER.email || "?").slice(0, 1).toUpperCase())}</button>` : `<button class="acctbtn" data-act="account">Sign in</button>`) : ""}`;
   const ss = document.getElementById("syncline"); if (ss) ss.innerHTML = `<span class="sync ${sc}"><b></b>${st}</span>`;
 }
 function render() {
@@ -950,7 +994,7 @@ function vReports() {
 /* more / settings */
 function vMore() {
   const used = new Set(allTx().map(t => t.cat));
-  const storeMsg = store === "db" ? "Your budget is saved to your Claude account and syncs across your devices. Only you can see it." : store === "local" ? "Your budget is saved in this browser only. Export a backup regularly." : "Connecting…";
+  const storeMsg = store === "cloud" ? `Signed in as ${esc(USER?.email || "")}. Your budget syncs across every device you sign in on.` : store === "local" && AUTH ? "Saved in this browser only. Sign in with your email to back it up and sync across devices." : store === "db" ? "Your budget is saved to your Claude account and syncs across your devices. Only you can see it." : store === "local" ? "Your budget is saved in this browser only. Export a backup regularly." : "Connecting…";
   const cats = S.meta.groups.map(g => `<div style="margin-top:14px"><div class="list">
       <div class="mgr-row">${emojiOn() ? `<button class="emo" data-emo="g:${g.id}" aria-label="Choose emoji for ${esc(g.name)}">${g.emoji ? esc(g.emoji) : "＋"}</button>` : ""}<input class="gname" value="${esc(g.name)}" data-gname="${g.id}" aria-label="Group name">${g.cats.length ? "" : `<button class="ib del" data-delgrp="${g.id}">Delete</button>`}</div>
       ${g.cats.map(c => `<div class="mgr-row" style="padding-left:22px">${emojiOn() ? `<button class="emo" data-emo="c:${c.id}" aria-label="Choose emoji for ${esc(c.name)}">${c.emoji ? esc(c.emoji) : "＋"}</button>` : ""}<input value="${esc(c.name)}" data-cname="${c.id}" aria-label="Category name"><button class="ib" data-hide="${c.id}">${c.hidden ? "Show" : "Hide"}</button>${used.has(c.id) ? "" : `<button class="ib del" data-delcat="${c.id}">Delete</button>`}</div>`).join("")}
@@ -958,7 +1002,7 @@ function vMore() {
     </div></div>`).join("");
   const accts = S.meta.accounts.map(a => `<div class="mgr-row"><input value="${esc(a.name)}" data-aname="${a.id}" aria-label="Account name"><button class="ib" data-onb="${a.id}">${a.onBudget ? "Budget" : "Tracking"}</button><button class="ib" data-closeacct="${a.id}">${a.closed ? "Reopen" : "Close"}</button></div>`).join("");
   return exampleBanner() + `
-  <h2 class="sec">Storage</h2><div class="card" style="display:grid;gap:6px"><div id="syncline"></div><p>${storeMsg}</p></div>
+  <h2 class="sec">Storage</h2><div class="card" style="display:grid;gap:6px"><div id="syncline"></div><p>${storeMsg}</p>${AUTH ? `<button class="btn ${USER ? "" : "pri"}" data-act="account" style="justify-self:start">${USER ? "Account" : "Sign in or create account"}</button>` : ""}</div>
   ${(() => { const W = workCfg(), R = hourRate(); return `<h2 class="sec" id="work">Work time</h2><div class="card" style="display:grid;gap:12px">
     <p class="small muted">See what you spend as hours or days of work. Leave the income empty to use last month's salary.</p>
     <div class="seg">${[["auto", "Last month's salary"], ["hourly", "Hourly"], ["daily", "Daily"]].map(([k, l]) => `<button data-wmode="${k}" class="${W.mode === k ? "on" : ""}">${l}</button>`).join("")}</div>
@@ -1146,6 +1190,76 @@ function catSheet(cid) {
   openSheet(draw(), mount); sheetRefresh = redraw;
 }
 
+function authMsg(e) {
+  const c = (e && e.code) || "";
+  return ({
+    "auth/invalid-email": "That email address doesn't look right.",
+    "auth/missing-password": "Enter your password.",
+    "auth/user-not-found": "No account uses that email. Create one instead.",
+    "auth/wrong-password": "Wrong email or password.",
+    "auth/invalid-credential": "Wrong email or password.",
+    "auth/invalid-login-credentials": "Wrong email or password.",
+    "auth/email-already-in-use": "An account already uses that email. Sign in instead.",
+    "auth/weak-password": "Use a password with at least 6 characters.",
+    "auth/too-many-requests": "Too many tries. Wait a few minutes, or reset your password.",
+    "auth/network-request-failed": "No internet connection. Try again when you're online.",
+    "auth/operation-not-allowed": "Email sign-in isn't switched on for this site yet.",
+    "auth/unauthorized-domain": "This website isn't allowed to sign in yet. Add it to Firebase's authorized domains.",
+  })[c] || "Something went wrong. Try again.";
+}
+function accountSheet(tab) {
+  if (!AUTH) return;
+  if (USER) {
+    openSheet(`${shead("Your account")}
+      <div class="kv" style="grid-template-columns:1fr"><div>Signed in as<span class="num" style="font-family:var(--f-body)">${esc(USER.email || "")}</span></div></div>
+      ${USER.emailVerified ? "" : `<p class="small muted">Email not verified yet. <button class="btn small" data-verify>Resend verification email</button></p>`}
+      <p class="small muted">Your budget syncs across every phone and computer where you sign in with this email.</p>
+      <button class="btn block" data-reset>Email me a password reset link</button>
+      <button class="btn danger block" data-signout>Sign out</button>`, el => {
+      el.addEventListener("click", async ev => {
+        if (ev.target.closest("[data-signout]")) { try { await AUTH.signOut(); closeSheet(); toast("Signed out"); } catch (e) { toast(authMsg(e)); } }
+        if (ev.target.closest("[data-reset]")) { try { await AUTH.sendPasswordResetEmail(USER.email); toast("Reset link sent to " + USER.email); } catch (e) { toast(authMsg(e)); } }
+        if (ev.target.closest("[data-verify]")) { try { await USER.sendEmailVerification(); toast("Verification email sent"); } catch (e) { toast(authMsg(e)); } }
+      });
+    });
+    return;
+  }
+  let t = tab || "in";
+  const draw = () => `${shead(t === "up" ? "Create account" : t === "reset" ? "Reset password" : "Sign in")}
+    ${t !== "reset" ? `<div class="seg">${[["in", "Sign in"], ["up", "Create account"]].map(([k, l]) => `<button data-at="${k}" class="${t === k ? "on" : ""}">${l}</button>`).join("")}</div>` : ""}
+    <form id="authf" style="display:grid;gap:12px" novalidate>
+      <label class="field">Email<input id="au-email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" autofocus></label>
+      ${t !== "reset" ? `<label class="field">Password<input id="au-pass" type="password" autocomplete="${t === "up" ? "new-password" : "current-password"}" placeholder="${t === "up" ? "At least 6 characters" : ""}"></label>` : ""}
+      <p id="au-err" class="small" style="color:var(--bad);min-height:0" role="alert"></p>
+      <button class="btn pri block" type="submit" id="au-go">${t === "up" ? "Create account" : t === "reset" ? "Send reset link" : "Sign in"}</button>
+    </form>
+    ${t === "in" ? `<button class="back" data-at="reset" style="justify-self:start">Forgot password?</button>` : t === "reset" ? `<button class="back" data-at="in" style="justify-self:start">‹ Back to sign in</button>` : ""}
+    <p class="small muted">${t === "up" ? "Anything you've entered on this device will be moved into your new account." : "Signing in loads your budget from your account."}</p>`;
+  const wire = el => {
+    el.querySelector("#authf").addEventListener("submit", async ev => {
+      ev.preventDefault();
+      const email = el.querySelector("#au-email").value.trim(), pw = el.querySelector("#au-pass")?.value || "", err = el.querySelector("#au-err"), go = el.querySelector("#au-go");
+      err.textContent = "";
+      if (!email) { err.textContent = "Enter your email."; return; }
+      if (t !== "reset" && !pw) { err.textContent = "Enter your password."; return; }
+      go.disabled = true; const label = go.textContent; go.textContent = "Please wait…";
+      try {
+        if (t === "reset") { await AUTH.sendPasswordResetEmail(email); closeSheet(); toast("Reset link sent. Check your inbox."); return; }
+        if (t === "up") { const cr = await AUTH.createUserWithEmailAndPassword(email, pw); try { await cr.user.sendEmailVerification(); } catch (e) {} closeSheet(); toast("Account created. Check your inbox to verify your email."); return; }
+        await AUTH.signInWithEmailAndPassword(email, pw); closeSheet(); toast("Signed in");
+      } catch (e) { err.textContent = authMsg(e); go.disabled = false; go.textContent = label; }
+    });
+  };
+  openSheet(draw(), el => {
+    wire(el);
+    el.addEventListener("click", ev => {
+      const b = ev.target.closest("[data-at]"); if (!b) return;
+      const em = el.querySelector("#au-email").value; t = b.dataset.at;
+      el.innerHTML = '<div class="grab"></div>' + draw(); el.querySelector("#au-email").value = em; wire(el); el.querySelector("#au-email").focus();
+    });
+  });
+}
+
 function emojiSheet(key) {
   const [kind, id] = key.split(":");
   const obj = kind === "g" ? S.meta.groups.find(g => g.id === id) : kind === "i" ? incById(id) : catById(id); if (!obj) return;
@@ -1283,6 +1397,7 @@ document.addEventListener("click", e => {
     case "keep": markDirty("meta"); render(); toast("Example saved. Edit it as you like."); break;
     case "gouncat": ui.tab = "transactions"; ui.acct = null; ui.tf = { acct: "", month: "", type: "uncat" }; ui.q = ""; render(); scrollTo(0, 0); break;
     case "gotx": ui.tab = "transactions"; ui.acct = null; ui.tf = { acct: "", month: "", type: "" }; ui.q = ""; render(); scrollTo(0, 0); break;
+    case "account": accountSheet(); break;
     case "gowork": ui.tab = "more"; ui.acct = null; render(); setTimeout(() => { const w = document.getElementById("work"); if (w) w.scrollIntoView({ block: "start" }); }, 0); break;
     case "toggletxwork": { const W = workCfg(); W.tx = !W.tx; markDirty("meta"); render(); toast(W.tx ? "Showing work time" : "Work time hidden"); break; }
     case "tfclear": ui.tf = { acct: "", month: "", type: "" }; ui.q = ""; ui.limit = 150; render(); break;
