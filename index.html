@@ -214,6 +214,12 @@ button.li:hover{background:var(--sunk)}
 .menu svg{width:20px;height:20px}
 .menu.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .menu i{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--bad);border:2px solid var(--surface)}
+.worknote{display:flex;gap:12px;align-items:center;margin-top:12px;padding:11px 14px;border-radius:14px;background:var(--surface);border:1px dashed var(--line);width:100%;text-align:left;font-size:14px;line-height:1.35}
+.worknote>.clock{font-size:22px;flex:none}
+button.worknote:hover{border-color:var(--accent)}
+.hint .wt{color:var(--muted)}
+.wt-s{display:block;font-size:11px;color:var(--muted);font-family:var(--f-body);font-weight:500;text-align:right;margin-top:1px}
+.btn.on{border-color:var(--accent);color:var(--accent);background:var(--sunk)}
 .mgr-row .ib{border:0;background:var(--sunk);border-radius:8px;padding:6px 8px;font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
 .mgr-row .ib.del{color:var(--bad)}
 .gname{font-family:var(--f-display);font-weight:700}
@@ -292,7 +298,7 @@ function defaultGroups() {
   ]);
 }
 function blank() {
-  return { meta: { v: 1, currency: "৳", locale: "en-IN", groups: defaultGroups(), accounts: [], assigned: {}, payees: {}, ious: [], incomeCats: defaultIncome(), showEmoji: true }, tx: {} };
+  return { meta: { v: 1, currency: "৳", locale: "en-IN", groups: defaultGroups(), accounts: [], assigned: {}, payees: {}, ious: [], incomeCats: defaultIncome(), showEmoji: true, work: { mode: "auto", rate: 0, hpd: 8, dpm: 22, budget: true, tx: false } }, tx: {} };
 }
 
 /* example budget: three months, clearly labelled in the UI */
@@ -358,7 +364,7 @@ function example() {
     { id: rid(), kind: "borrowed", person: "Tanvir", amount: 300000, date: CUR + "-09", due: null, note: "Concert tickets", acct: null, closed: false, payments: [] },
     { id: rid(), kind: "lent", person: "Rahim", amount: 100000, date: m0 + "-03", due: null, note: "Cricket match tickets", acct: null, closed: false, payments: [{ id: rid(), date: m0 + "-28", amount: 100000 }] },
   ];
-  return { meta: { v: 1, currency: "৳", locale: "en-IN", groups, accounts, assigned, payees: { "shwapno": C["Groceries"], "pathao": C["Transport"], "landlord": C["Rent"], "employer salary": IC["Salary"], "freelance project": IC["Freelance"] }, ious, incomeCats, showEmoji: true }, tx };
+  return { meta: { v: 1, currency: "৳", locale: "en-IN", groups, accounts, assigned, payees: { "shwapno": C["Groceries"], "pathao": C["Transport"], "landlord": C["Rent"], "employer salary": IC["Salary"], "freelance project": IC["Freelance"] }, ious, incomeCats, showEmoji: true, work: { mode: "auto", rate: 0, hpd: 8, dpm: 22, budget: true, tx: false } }, tx };
 }
 
 /* ---------- derived data ---------- */
@@ -561,14 +567,16 @@ function exampleBanner() {
 }
 function vBudget() {
   const m = ui.month, B = budget(m);
-  let totA = 0, totAct = 0, totAv = 0, under = 0;
+  let totA = 0, totAct = 0, totAv = 0, under = 0, spentAll = 0;
+  const W = workCfg(), WR = W.budget ? hourRate() : null;
   const groups = S.meta.groups.map(g => {
     const cats = g.cats.filter(c => !c.hidden);
     let ga = 0, gav = 0;
     const rows = cats.map(c => {
       const r = B.rows[c.id] || { carry: 0, assigned: 0, activity: 0, available: 0 };
       const n = need(c, r, m);
-      ga += r.assigned; gav += r.available; totA += r.assigned; totAct += r.activity; totAv += r.available;
+      ga += r.assigned; gav += r.available; totA += r.assigned; totAct += r.activity; totAv += r.available; if (r.activity < 0) spentAll += -r.activity;
+      const wt = WR && r.activity < 0 ? workTime(-r.activity, WR) : "";
       if (n) under += n.under;
       let st = r.available < 0 ? "bad" : (n && n.under > 0) ? "warn" : r.available > 0 ? "good" : "";
       let hint = "", hc = "";
@@ -584,7 +592,7 @@ function vBudget() {
         <span class="nm">${esc(lbl(c))}</span>
         <span class="right"><span class="pill ${st}">${fmt(r.available)}</span><span class="asg num">${r.assigned ? "assigned " + fmt(r.assigned) : ""}</span></span>
         <span class="bar ${barCls}"><i style="width:${Math.max(0, Math.round(pct * 100))}%"></i></span>
-        ${hint ? `<span class="hint ${hc}">${esc(hint)}</span>` : ""}
+        ${hint || wt ? `<span class="hint ${hc}">${esc(hint)}${wt ? `<span class="wt">${hint ? " · " : ""}⏱ ${wt} of work</span>` : ""}</span>` : ""}
       </button>`;
     }).join("");
     if (!cats.length) return "";
@@ -607,11 +615,14 @@ function vBudget() {
     <div class="chip">Available<span class="num">${fmt(totAv)}</span></div>
     <div class="chip">Age of money<span class="num">${aom == null ? "—" : aom + " days"}</span></div>
   </div>
+  ${!W.budget ? "" : WR ? `<div class="worknote"><span class="clock" aria-hidden="true">⏱</span><p>Spending in ${mLabel(m)} took <b>${workTime(spentAll, WR) || "no time"}</b> of work.<br><span class="small muted">Your time ≈ <span class="num">${fmt(Math.round(WR.r / 100) * 100)}</span>/hr · ${esc(rateSrc(WR))}</span></p></div>`
+    : `<button class="worknote" data-act="gowork"><span class="clock" aria-hidden="true">⏱</span><p>See your spending as hours of work. <b>Add your income</b></p></button>`}
   ${groups || `<div class="empty">No categories yet. Add some under More.</div>`}`;
 }
 
 function txRow(t) {
   const a = acctById(t.acct);
+  const wtx = ui.tab === "transactions" && workCfg().tx && t.amount < 0 && !t.xfer ? workTime(-t.amount, hourRate()) : "";
   const catTxt = t.xfer ? (t.cat ? catName(t.cat) : "Transfer") : (t.cat ? catName(t.cat) : "Uncategorized");
   const showAcct = ui.tab === "transactions" || ui.acct === "all" || ui.acct === "uncat";
   let title, sub, icoTxt;
@@ -629,7 +640,7 @@ function txRow(t) {
   }
   return `<div class="li"><button class="clr ${t.rec ? "lock" : t.cleared ? "on" : ""}" data-clr="${t.id}" aria-label="${t.rec ? "Reconciled" : t.cleared ? "Cleared" : "Not cleared"}" title="${t.rec ? "Reconciled" : "Tap to toggle cleared"}">${t.rec ? "🔒" : t.cleared ? "✓" : ""}</button>
     <button class="li" style="padding:0;border:0" data-tx="${t.id}"><span class="ico" style="${ui.tab === "transactions" ? "font-size:16px" : ""}">${esc(icoTxt)}</span><span class="main"><span class="t" style="display:block">${title}</span><span class="s" style="display:block">${sub}</span></span>
-    <span class="amt num ${t.amount > 0 ? "in" : ""}">${fmt(t.amount, { sign: true })}</span></button></div>`;
+    <span class="amt num ${t.amount > 0 ? "in" : ""}">${fmt(t.amount, { sign: true })}${wtx ? `<span class="wt-s">⏱ ${wtx}</span>` : ""}</span></button></div>`;
 }
 function txList(list) {
   if (!list.length) return `<div class="empty">No transactions here yet.</div>`;
@@ -644,7 +655,7 @@ function accSeg() {
   return `<div class="seg" role="tablist" style="margin-bottom:12px">${[["accounts", "Accounts"], ["ious", "Lent & Owed"]].map(([k, l]) => `<button role="tab" data-accview="${k}" class="${ui.accView === k ? "on" : ""}">${l}</button>`).join("")}</div>`;
 }
 function vTransactions() {
-  const I = index(), f = ui.tf;
+  const I = index(), f = ui.tf, W = workCfg(), TR = W.tx ? hourRate() : null;
   let list = allTx();
   if (f.acct) list = list.filter(t => t.acct === f.acct);
   if (f.month) list = list.filter(t => ymOf(t.date) === f.month);
@@ -659,13 +670,15 @@ function vTransactions() {
   const vis = list.filter(t => !isInternal(t));
   const inflow = vis.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0), outflow = vis.filter(t => t.amount < 0).reduce((s, t) => s + t.amount, 0);
   const months = [...new Set(allTx().map(t => ymOf(t.date)))].sort().reverse();
+  const WT = TR ? workTime(-outflow, TR) : "";
   const active = f.acct || f.month || f.type || q;
   const opt = (v, l, cur) => `<option value="${v}" ${v === cur ? "selected" : ""}>${esc(l)}</option>`;
   return exampleBanner() + `
     <div class="acct-hero"><div class="small muted">${list.length} transaction${list.length === 1 ? "" : "s"}${active ? " match your filters" : ""}</div>
-      <div class="row" style="font-size:13px;margin-top:6px"><span>In <b class="num" style="color:var(--good)">${fmt(inflow)}</b></span><span>Out <b class="num" style="color:var(--bad)">${fmt(-outflow)}</b></span><span>Net <b class="num">${fmt(inflow + outflow, { sign: true })}</b></span></div>
+      <div class="row" style="font-size:13px;margin-top:6px"><span>In <b class="num" style="color:var(--good)">${fmt(inflow)}</b></span><span>Out <b class="num" style="color:var(--bad)">${fmt(-outflow)}</b>${WT ? ` <span class="muted">≈ ${WT} of work</span>` : ""}</span><span>Net <b class="num">${fmt(inflow + outflow, { sign: true })}</b></span></div>
       <p class="small muted" style="margin-top:4px">Transfers between your own accounts aren't counted in these totals.</p></div>
-    <div class="toolbar"><input class="search" id="q" type="search" placeholder="Search payee, category, memo, amount" value="${esc(ui.q)}" aria-label="Search transactions"><button class="btn pri" data-act="newtx">Add</button></div>
+    <div class="toolbar"><input class="search" id="q" type="search" placeholder="Search payee, category, memo, amount" value="${esc(ui.q)}" aria-label="Search transactions"><button class="btn ${W.tx ? "on" : ""}" data-act="toggletxwork" aria-pressed="${W.tx}" title="Show work time for each expense">⏱ Work time</button><button class="btn pri" data-act="newtx">Add</button></div>
+    ${W.tx && !TR ? `<p class="notice" style="background:var(--hi-soft);color:var(--hi-ink)">No salary found yet. <button class="btn small" data-act="gowork">Add your income</button></p>` : ""}
     <div class="grid2" style="margin-top:8px;grid-template-columns:repeat(3,minmax(0,1fr))">
       <label class="field">Account<select id="tf-acct">${opt("", "All accounts", f.acct)}${S.meta.accounts.map(a => opt(a.id, a.name, f.acct)).join("")}</select></label>
       <label class="field">Month<select id="tf-month">${opt("", "All months", f.month)}${months.map(m => opt(m, mLabel(m), f.month)).join("")}</select></label>
@@ -827,6 +840,44 @@ function iouSheet(id, kind) {
   });
 }
 
+/* work time: what spending costs in hours or days of work */
+function workCfg() {
+  const w = S.meta.work ||= {};
+  if (!["auto", "hourly", "daily"].includes(w.mode)) w.mode = "auto";
+  if (!(w.hpd > 0)) w.hpd = 8; if (!(w.dpm > 0)) w.dpm = 22;
+  if (w.budget === undefined) w.budget = true; if (w.tx === undefined) w.tx = false;
+  return w;
+}
+function lastSalary() {
+  const salIds = new Set((S.meta.incomeCats || []).filter(c => /salary|wage|বেতন/i.test(c.name)).map(c => c.id));
+  const order = []; for (let i = 1; i <= 12; i++) order.push(addM(CUR, -i)); order.push(CUR);
+  const sum = (m, test) => (S.tx[m] || []).reduce((a, t) => (t.xfer || t.amount <= 0 || t.payee === "Starting balance" || t.payee === "Reconciliation adjustment" || !test(t)) ? a : a + t.amount, 0);
+  for (const m of order) { const v = sum(m, t => salIds.has(t.cat)); if (v > 0) return { m, amt: v, kind: "salary" }; }
+  for (const m of order) { const v = sum(m, t => isIncome(t.cat)); if (v > 0) return { m, amt: v, kind: "income" }; }
+  return null;
+}
+function hourRate() {
+  const w = workCfg();
+  if (w.mode === "hourly" && w.rate > 0) return { r: w.rate, src: "hourly" };
+  if (w.mode === "daily" && w.rate > 0) return { r: w.rate / w.hpd, src: "daily" };
+  const s = lastSalary(); if (!s) return null;
+  return { r: s.amt / (w.dpm * w.hpd), src: "auto", s };
+}
+function rateSrc(R) {
+  const w = workCfg();
+  if (R.src === "hourly") return "From the hourly income you entered";
+  if (R.src === "daily") return `From ${fmt(w.rate)} a day ÷ ${w.hpd} hours`;
+  return `From ${mLabel(R.s.m)} ${R.s.kind === "salary" ? "salary" : "income"} ${fmt(R.s.amt)} ÷ ${w.dpm} days ÷ ${w.hpd} hrs${w.mode !== "auto" ? " (no " + w.mode + " income entered yet)" : ""}`;
+}
+function workTime(c, R) {
+  if (!R || !(R.r > 0) || !(c > 0)) return "";
+  const w = workCfg(), h = c / R.r;
+  if (h < 1) { const mi = Math.max(1, Math.round(h * 60)); return mi + " min"; }
+  if (h < w.hpd) { const v = Math.round(h * 10) / 10; return v + (v === 1 ? " hr" : " hrs"); }
+  const d = h / w.hpd, v = d < 10 ? Math.round(d * 10) / 10 : Math.round(d);
+  return v + (v === 1 ? " workday" : " workdays");
+}
+
 function spendByCat(m) {
   const I = index(), a = I.act[m] || {}; const out = [];
   for (const g of S.meta.groups) for (const c of g.cats) { const v = -(a[c.id] || 0); if (v > 0) out.push({ c, g, v }); }
@@ -908,6 +959,15 @@ function vMore() {
   const accts = S.meta.accounts.map(a => `<div class="mgr-row"><input value="${esc(a.name)}" data-aname="${a.id}" aria-label="Account name"><button class="ib" data-onb="${a.id}">${a.onBudget ? "Budget" : "Tracking"}</button><button class="ib" data-closeacct="${a.id}">${a.closed ? "Reopen" : "Close"}</button></div>`).join("");
   return exampleBanner() + `
   <h2 class="sec">Storage</h2><div class="card" style="display:grid;gap:6px"><div id="syncline"></div><p>${storeMsg}</p></div>
+  ${(() => { const W = workCfg(), R = hourRate(); return `<h2 class="sec" id="work">Work time</h2><div class="card" style="display:grid;gap:12px">
+    <p class="small muted">See what you spend as hours or days of work. Leave the income empty to use last month's salary.</p>
+    <div class="seg">${[["auto", "Last month's salary"], ["hourly", "Hourly"], ["daily", "Daily"]].map(([k, l]) => `<button data-wmode="${k}" class="${W.mode === k ? "on" : ""}">${l}</button>`).join("")}</div>
+    ${W.mode !== "auto" ? `<label class="field">${W.mode === "hourly" ? "Income per hour" : "Income per day"}<input id="work-amt" class="num" inputmode="decimal" value="${W.rate ? plain(W.rate) : ""}" placeholder="0"></label>` : ""}
+    <div class="grid2"><label class="field">Hours per workday<input id="work-hpd" class="num" inputmode="decimal" value="${W.hpd}"></label><label class="field">Workdays per month<input id="work-dpm" class="num" inputmode="numeric" value="${W.dpm}"></label></div>
+    <div style="background:var(--sunk);border-radius:12px;padding:10px 12px;font-size:14px">${R ? `Your time ≈ <b class="num">${fmt(Math.round(R.r / 100) * 100)}</b> per hour · <b class="num">${fmt(Math.round(R.r * W.hpd / 100) * 100)}</b> per workday<br><span class="small muted">${esc(rateSrc(R))}</span>` : `<span class="muted">No salary found in recent months. Enter an hourly or daily income, or record your salary under the Salary income category.</span>`}</div>
+    <label class="toggle">Show on Budget tab<input id="work-budget" type="checkbox" ${W.budget ? "checked" : ""}></label>
+    <label class="toggle">Show on Transactions tab<input id="work-tx" type="checkbox" ${W.tx ? "checked" : ""}></label>
+  </div>`; })()}
   <h2 class="sec">Display</h2><div class="card"><label class="toggle">Show emojis on categories<input id="emoji-toggle" type="checkbox" ${emojiOn() ? "checked" : ""}></label></div>
   <h2 class="sec">Currency</h2><div class="card"><label class="field">Display currency<select id="cur">${CURRENCIES.map(c => `<option value="${c[0]}" ${S.meta.currency === c[0] ? "selected" : ""}>${c[2]}</option>`).join("")}</select></label></div>
   <h2 class="sec">Categories</h2><p class="small muted" style="margin:0 4px">${emojiOn() ? "Tap the square to add an emoji. " : ""}Rename by editing. Categories with transactions can be hidden, not deleted.</p>
@@ -926,6 +986,7 @@ function vMore() {
     <p><b>Give every taka a job.</b> Income lands in Ready to Assign. Assign it to categories until it reaches zero.</p>
     <p><b>Roll with the punches.</b> Overspent? Move money from another category. Leftover money rolls into next month.</p>
     <p><b>Targets.</b> Set a monthly amount or a save-by date. "Fund targets" assigns exactly what's needed.</p>
+    <p><b>Work time.</b> Turns spending into hours or days of work, from your hourly or daily income or last month's salary.</p>
     <p><b>Lent &amp; Owed.</b> Under Accounts, track money you lent or borrowed, due dates and repayments. Link an account to move the money for real.</p>
     <p><b>Reconcile.</b> Mark transactions cleared, then match your account to the bank's balance.</p>
   </div>`;
@@ -1032,6 +1093,7 @@ function catSheet(cid) {
     const t = c.target || {};
     return `${shead(esc(lbl(c)))}
       <div class="kv"><div>Carried<span class="num">${fmt(r.carry)}</span></div><div>Assigned<span class="num">${fmt(r.assigned)}</span></div><div>Activity<span class="num">${fmt(r.activity)}</span></div><div>Available<span class="num" style="color:${r.available < 0 ? "var(--bad)" : "inherit"}">${fmt(r.available)}</span></div></div>
+      ${(() => { const R = workCfg().budget ? hourRate() : null; return R && r.activity < 0 ? `<p class="small muted">⏱ Spending here in ${mLabel(m)} took <b>${workTime(-r.activity, R)}</b> of work.</p>` : ""; })()}
       <label class="field">Assigned in ${mLabel(m)}<input id="c-asg" class="num" inputmode="decimal" value="${plain(r.assigned)}"></label>
       <div class="quick">
         ${n && n.under > 0 ? `<button data-q="${r.assigned + n.under}">Fund target +${fmt(n.under)}</button>` : ""}
@@ -1196,6 +1258,7 @@ document.addEventListener("click", e => {
   const clr = el.closest("[data-clr]"); if (clr) { const f = findTx(clr.dataset.clr); if (f && !f.t.rec) { f.t.cleared = !f.t.cleared; markDirty("tx-" + f.m); render(); } else if (f) toast("Reconciled transactions are locked. Open it to edit."); return; }
   const av = el.closest("[data-accview]"); if (av) { ui.accView = av.dataset.accview; render(); return; }
   const io = el.closest("[data-iou]"); if (io) { iouSheet(io.dataset.iou); return; }
+  const wm = el.closest("[data-wmode]"); if (wm) { workCfg().mode = wm.dataset.wmode; markDirty("meta"); render(); return; }
   const rep = el.closest("[data-rep]"); if (rep) { ui.report = rep.dataset.rep; render(); return; }
   const h = (sel, fn) => { const b = el.closest(sel); if (b) { fn(b); return true; } return false; };
   if (h("[data-hide]", b => { const c = catById(b.dataset.hide); c.hidden = !c.hidden; markDirty("meta"); render(); })) return;
@@ -1220,6 +1283,8 @@ document.addEventListener("click", e => {
     case "keep": markDirty("meta"); render(); toast("Example saved. Edit it as you like."); break;
     case "gouncat": ui.tab = "transactions"; ui.acct = null; ui.tf = { acct: "", month: "", type: "uncat" }; ui.q = ""; render(); scrollTo(0, 0); break;
     case "gotx": ui.tab = "transactions"; ui.acct = null; ui.tf = { acct: "", month: "", type: "" }; ui.q = ""; render(); scrollTo(0, 0); break;
+    case "gowork": ui.tab = "more"; ui.acct = null; render(); setTimeout(() => { const w = document.getElementById("work"); if (w) w.scrollIntoView({ block: "start" }); }, 0); break;
+    case "toggletxwork": { const W = workCfg(); W.tx = !W.tx; markDirty("meta"); render(); toast(W.tx ? "Showing work time" : "Work time hidden"); break; }
     case "tfclear": ui.tf = { acct: "", month: "", type: "" }; ui.q = ""; ui.limit = 150; render(); break;
     case "acctback": ui.acct = null; ui.q = ""; render(); break;
     case "addacct": acctSheet(); break;
@@ -1242,6 +1307,11 @@ document.addEventListener("change", e => {
   if (t.dataset.gname) { const g = S.meta.groups.find(x => x.id === t.dataset.gname); const v = t.value.trim(); if (v) { g.name = v; markDirty("meta"); } else t.value = g.name; return; }
   if (t.dataset.cname) { const c = catById(t.dataset.cname); const v = t.value.trim(); if (v) { c.name = v; markDirty("meta"); } else t.value = c.name; return; }
   if (t.dataset.aname) { const a = acctById(t.dataset.aname); const v = t.value.trim(); if (v) { a.name = v; markDirty("meta"); } else t.value = a.name; return; }
+  if (t.id === "work-amt") { const v = parseAmt(t.value); workCfg().rate = v && v > 0 ? v : 0; markDirty("meta"); render(); return; }
+  if (t.id === "work-hpd") { const v = parseFloat(t.value); workCfg().hpd = v > 0 && v <= 24 ? Math.round(v * 10) / 10 : 8; markDirty("meta"); render(); return; }
+  if (t.id === "work-dpm") { const v = parseInt(t.value, 10); workCfg().dpm = v > 0 && v <= 31 ? v : 22; markDirty("meta"); render(); return; }
+  if (t.id === "work-budget") { workCfg().budget = t.checked; markDirty("meta"); render(); return; }
+  if (t.id === "work-tx") { workCfg().tx = t.checked; markDirty("meta"); render(); return; }
   if (t.id === "emoji-toggle") { S.meta.showEmoji = t.checked; markDirty("meta"); render(); toast(t.checked ? "Emojis on" : "Emojis off"); return; }
   if (t.dataset.iname) { const c = incById(t.dataset.iname); const v = t.value.trim(); if (v) { c.name = v; markDirty("meta"); } else t.value = c.name; return; }
   if (t.dataset.newinc) { const v = t.value.trim(); if (!v) return; S.meta.incomeCats.push({ id: "inc-" + rid(), name: v, emoji: "" }); markDirty("meta"); render(); toast("Income category added"); return; }
