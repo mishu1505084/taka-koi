@@ -2,13 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <title>Taka Koi?</title>
 <meta name="description" content="Zero-based envelope budgeting in taka.">
-<meta name="theme-color" content="#0E6B57">
+<meta name="theme-color" content="#EEF2EF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D1412" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Taka Koi?">
+<meta name="apple-mobile-web-app-title" content="Taka Koi">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="application-name" content="Taka Koi">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23E7B43E'/%3E%3Ccircle cx='16' cy='16' r='11.2' fill='none' stroke='%233A2A00' stroke-opacity='.55'/%3E%3Ctext x='16' y='21.6' text-anchor='middle' font-size='15' font-weight='700' fill='%233A2A00'%3E%E0%A7%B3%3C/text%3E%3C/svg%3E">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -243,6 +249,68 @@ button.worknote:hover{border-color:var(--accent)}
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:500;z-index:30;max-width:calc(100% - 32px);box-shadow:var(--shadow)}
 .muted{color:var(--muted)} .small{font-size:12px}
 p{margin:0}
+
+/* app feel on phones: no tap flash or double-tap zoom, no background scroll behind sheets */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+button,a,label,select,input{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.tabs,.top,.ghead,.seg{-webkit-user-select:none;user-select:none}
+html.locked,html.locked body{overflow:hidden}
+.sheet{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.ptitle{display:none}
+@media (max-width:899px){.dk{display:none!important}}
+.top .month{margin-left:auto}
+/* iOS zooms into any field under 16px, so touch screens get 16px text in every input */
+@media (pointer:coarse){.search,.mgr-row input,.field input,.field select{font-size:16px}}
+@media (hover:none){.cat:active,button.li:active,.iou:active,.btn:active{background:var(--sunk)}.btn.pri:active{background:var(--accent);filter:brightness(.92)}}
+.tfgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:519px){.btn.wide{display:none}.tfgrid{grid-template-columns:1fr 1fr}.tfgrid>:first-child{grid-column:1/-1}}
+@media (max-width:379px){.brand span{display:none}.month span{min-width:70px;font-size:13px}.month button{width:28px;height:28px}.chip{flex-basis:70px}.rta strong{font-size:30px}}
+@media (max-width:339px){.brand{display:none}.tabs button{font-size:9.5px}}
+@media (display-mode:standalone){.toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}}
+
+/* desktop: sidebar navigation, wider content, budget summary beside the categories, dialogs centred */
+@media (min-width:900px){
+  body{padding-left:calc(240px + 40px);padding-right:40px}
+  .app{max-width:1060px;padding-bottom:56px}
+  .mb{display:none!important}
+  .top{padding-block:18px 14px}
+  .ptitle{display:block;margin:0 auto 0 0;font-family:var(--f-display);font-weight:800;font-size:26px;letter-spacing:-.02em}
+  .top .month{margin-left:0}
+  .tabs{top:0;right:auto;width:240px;border-top:0;border-right:1px solid var(--line);padding:18px 14px calc(18px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));overflow-y:auto}
+  .tabs .in{display:flex;flex-direction:column;align-items:stretch;gap:2px;max-width:none;min-height:100%}
+  .tabs .side-brand{order:-3;display:flex!important;align-items:center;gap:9px;font-family:var(--f-display);font-weight:800;font-size:21px;letter-spacing:-.02em;padding:4px 10px 18px}
+  .tabs .side-brand svg{width:30px;height:30px}
+  .tabs .side-brand em{font-style:normal;color:var(--accent)}
+  .tabs button{flex-direction:row;justify-content:flex-start;gap:12px;font-size:14.5px;padding:10px 12px;border-radius:12px;letter-spacing:0;color:var(--ink)}
+  .tabs button svg{color:var(--muted)}
+  .tabs button:hover{background:var(--sunk)}
+  .tabs button.on{background:var(--sunk);color:var(--accent)}
+  .tabs button.on svg{color:var(--accent)}
+  .tabs .add{order:-2;width:auto;height:auto;margin:0 0 14px;display:flex;justify-content:center;gap:8px;border-radius:12px;padding:11px 14px;box-shadow:none;color:var(--accent-ink)}
+  .tabs .add svg{width:20px;height:20px;color:inherit}
+  .tabs .add:hover{background:var(--accent);filter:brightness(1.07)}
+  .tabs .side-more{margin-top:auto}
+  .tabs .keys{font-size:12px;color:var(--muted);padding:12px 12px 0;line-height:1.6}
+  .tabs .keys kbd{font-family:var(--f-num);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--bg)}
+  .rta strong{font-size:38px}
+  .cat{padding:12px 16px}
+  .rep-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+  .rep-grid>*{margin-top:0!important}
+  .toast{bottom:28px;left:calc(50% + 120px)}
+  .scrim{align-items:center;padding:32px}
+  .sheet{max-width:560px;max-height:min(88vh,920px);border-radius:22px;padding:20px 26px 26px;animation:pop .16s ease-out}
+  .sheet .grab{display:none}
+  @keyframes pop{from{transform:scale(.97);opacity:0}}
+  .chart{max-height:300px}
+}
+@media (min-width:1180px){
+  .bud{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
+  .bud-side{grid-column:2;grid-row:1;position:sticky;top:84px}
+  .bud-main{grid-column:1;grid-row:1}
+  .bud-main>.group:first-child{margin-top:0}
+  .bud-side .chips{display:grid;grid-template-columns:1fr 1fr}
+}
+@media (min-width:1360px){.bud{grid-template-columns:minmax(0,1fr) 380px;gap:32px}}
 </style>
 
 <div class="app">
@@ -465,7 +533,7 @@ function ageOfMoney() {
 let DB = null, UID = null, unsub = null, pendingSnap = null, knownDocs = new Set(), gotFirst = false;
 let docRef = k => DB.doc("data/users/" + UID + "/" + k);
 /* email login (hosted site only): Firebase Auth + Firestore, enabled when window.TAKA_FIREBASE holds a config */
-let AUTH = null, FS = null, USER = null, uploadedLocal = false;
+let AUTH = null, FS = null, USER = null, uploadedLocal = false, authKnown = false;
 const dirty = new Set(); let flushTimer = null, flushing = false;
 
 function markDirty(...keys) {
@@ -524,8 +592,9 @@ async function connect() {
     try {
       firebase.initializeApp(window.TAKA_FIREBASE);
       AUTH = firebase.auth(); FS = firebase.firestore();
+      try { FS.enablePersistence({ synchronizeTabs: true }).catch(() => {}); } catch (e) {}
       loadLocal(); store = "local"; render();
-      AUTH.onAuthStateChanged(u => { if (u) startCloud(u); else stopCloud(); });
+      AUTH.onAuthStateChanged(u => { authKnown = true; if (u) startCloud(u); else stopCloud(); });
     } catch (e) { AUTH = null; loadLocal(); store = "local"; render(); }
   } else {
     store = "local"; loadLocal(); render();
@@ -545,7 +614,8 @@ function startCloud(u) {
   docRef = k => FS.doc("takakoi/" + UID + "/data/" + k);
   if (unsub) unsub();
   unsub = FS.collection("takakoi/" + UID + "/data").onSnapshot({ includeMetadataChanges: true }, snap => {
-    if (!gotFirst && snap.metadata.fromCache) return;   /* wait for the server before deciding the account is empty */
+    /* a cached copy with data is fine to show (offline start); an empty cache waits for the server before deciding the account is empty */
+    if (!gotFirst && snap.metadata.fromCache && !snap.docs.some(d => d.id === "meta")) return;
     if (syncState === "busy" && !dirty.size && !flushing) syncState = "idle";
     applySnap(snap);
   }, () => { syncState = "err"; renderTop(); toast("Couldn't reach your account. Check your connection."); });
@@ -585,19 +655,24 @@ const ICONS = {
 };
 function renderTabs() {
   const b = (k, l) => `<button data-tab="${k}" class="${ui.tab === k ? "on" : ""}" aria-label="${l}">${ICONS[k]}${l}</button>`;
-  $("#tabs").innerHTML = b("budget", "Budget") + b("transactions", "Transactions") + `<button class="add" data-act="newtx" aria-label="Add transaction">${ICONS.add}</button>` + b("accounts", "Accounts") + b("reports", "Reports");
+  $("#tabs").innerHTML = `<div class="side-brand dk">${COIN}<span>Taka Koi<em>?</em></span></div>`
+    + b("budget", "Budget") + b("transactions", "Transactions") + `<button class="add" data-act="newtx" aria-label="Add transaction" title="Add transaction (N)">${ICONS.add}<span class="dk">Add transaction</span></button>` + b("accounts", "Accounts") + b("reports", "Reports")
+    + `<button data-tab="more" class="side-more dk ${ui.tab === "more" ? "on" : ""}" aria-label="More: settings, categories, backup">${ICONS.more}Settings${syncState === "err" ? ` <span style="color:var(--bad)">●</span>` : ""}</button>`
+    + `<p class="keys dk"><kbd>N</kbd> add transaction<br><kbd>/</kbd> search · <kbd>←</kbd> <kbd>→</kbd> month</p>`;
 }
 function renderTop() {
   if (!S) return;
   const showMonth = ui.tab === "budget" || ui.tab === "reports";
   let sc = "", st = "";
   if (mode === "example") { st = "Example"; }
+  else if ((store === "cloud" || store === "db") && !navigator.onLine) { sc = "busy"; st = dirty.size || flushing ? "Offline · will sync" : "Offline"; }
   else if (syncState === "busy") { sc = "busy"; st = "Saving"; }
   else if (syncState === "err") { sc = "err"; st = "Not saved"; }
   else if (store === "db" || store === "cloud") { sc = "ok"; st = "Synced"; }
   else if (store === "local") { sc = "ok"; st = "This browser"; }
   else { st = "Loading"; }
-  $("#top").innerHTML = `<button class="menu ${ui.tab === "more" ? "on" : ""}" data-tab="more" aria-label="More: settings, categories, backup" title="More">${ICONS.more}${syncState === "err" ? "<i></i>" : ""}</button><div class="brand">${COIN}<span>Taka Koi<em>?</em></span></div>
+  const TITLES = { budget: "Budget", transactions: "Transactions", accounts: "Accounts", reports: "Reports", more: "Settings" };
+  $("#top").innerHTML = `<button class="menu mb ${ui.tab === "more" ? "on" : ""}" data-tab="more" aria-label="More: settings, categories, backup" title="More">${ICONS.more}${syncState === "err" ? "<i></i>" : ""}</button><div class="brand mb">${COIN}<span>Taka Koi<em>?</em></span></div><h1 class="ptitle">${TITLES[ui.tab] || ""}</h1>
     ${showMonth ? `<div class="month"><button data-act="mprev" aria-label="Previous month">‹</button><span>${mLabel(ui.month)}</span><button data-act="mnext" aria-label="Next month">›</button></div>` : ""}
     ${AUTH ? (USER ? `<button class="acctbtn me" data-act="account" aria-label="Account: ${esc(USER.email || "")}" title="${esc(USER.email || "")}">${esc((USER.email || "?").slice(0, 1).toUpperCase())}</button>` : `<button class="acctbtn" data-act="account">Sign in</button>`) : ""}`;
   const ss = document.getElementById("syncline"); if (ss) ss.innerHTML = `<span class="sync ${sc}"><b></b>${st}</span>`;
@@ -653,7 +728,7 @@ function vBudget() {
   const rtaCls = B.rta > 0 ? "pos" : B.rta < 0 ? "neg" : "";
   const sub = B.rta > 0 ? "Give these taka a job" : B.rta < 0 ? "You assigned more than you have" : "Every taka has a job";
   const aom = ageOfMoney();
-  return exampleBanner() + `
+  return exampleBanner() + `<div class="bud"><div class="bud-side">
   <section class="rta ${rtaCls}">
     <div><span class="lbl">Ready to Assign</span><strong class="num">${fmt(B.rta)}</strong><span class="sub">${sub}</span></div>
     <button class="go" data-act="auto" ${under > 0 ? "" : "disabled"}>${under > 0 ? `Fund targets<br><span class="num">${fmt(under)}</span>` : "Targets funded"}</button>
@@ -668,7 +743,8 @@ function vBudget() {
   </div>
   ${!W.budget ? "" : WR ? `<div class="worknote"><span class="clock" aria-hidden="true">⏱</span><p>Spending in ${mLabel(m)} took <b>${workTime(spentAll, WR) || "no time"}</b> of work.<br><span class="small muted">Your time ≈ <span class="num">${fmt(Math.round(WR.r / 100) * 100)}</span>/hr · ${esc(rateSrc(WR))}</span></p></div>`
     : `<button class="worknote" data-act="gowork"><span class="clock" aria-hidden="true">⏱</span><p>See your spending as hours of work. <b>Add your income</b></p></button>`}
-  ${groups || `<div class="empty">No categories yet. Add some under More.</div>`}`;
+  </div><div class="bud-main">
+  ${groups || `<div class="empty">No categories yet. Add some under More.</div>`}</div></div>`;
 }
 
 function txRow(t) {
@@ -728,9 +804,9 @@ function vTransactions() {
     <div class="acct-hero"><div class="small muted">${list.length} transaction${list.length === 1 ? "" : "s"}${active ? " match your filters" : ""}</div>
       <div class="row" style="font-size:13px;margin-top:6px"><span>In <b class="num" style="color:var(--good)">${fmt(inflow)}</b></span><span>Out <b class="num" style="color:var(--bad)">${fmt(-outflow)}</b>${WT ? ` <span class="muted">≈ ${WT} of work</span>` : ""}</span><span>Net <b class="num">${fmt(inflow + outflow, { sign: true })}</b></span></div>
       <p class="small muted" style="margin-top:4px">Transfers between your own accounts aren't counted in these totals.</p></div>
-    <div class="toolbar"><input class="search" id="q" type="search" placeholder="Search payee, category, memo, amount" value="${esc(ui.q)}" aria-label="Search transactions"><button class="btn ${W.tx ? "on" : ""}" data-act="toggletxwork" aria-pressed="${W.tx}" title="Show work time for each expense">⏱ Work time</button><button class="btn pri" data-act="newtx">Add</button></div>
+    <div class="toolbar"><input class="search" id="q" type="search" placeholder="Search payee, category, memo, amount" value="${esc(ui.q)}" aria-label="Search transactions"><button class="btn ${W.tx ? "on" : ""}" data-act="toggletxwork" aria-pressed="${W.tx}" title="Show work time for each expense">⏱ Work time</button><button class="btn pri wide" data-act="newtx">Add</button></div>
     ${W.tx && !TR ? `<p class="notice" style="background:var(--hi-soft);color:var(--hi-ink)">No salary found yet. <button class="btn small" data-act="gowork">Add your income</button></p>` : ""}
-    <div class="grid2" style="margin-top:8px;grid-template-columns:repeat(3,minmax(0,1fr))">
+    <div class="grid2 tfgrid" style="margin-top:8px">
       <label class="field">Account<select id="tf-acct">${opt("", "All accounts", f.acct)}${S.meta.accounts.map(a => opt(a.id, a.name, f.acct)).join("")}</select></label>
       <label class="field">Month<select id="tf-month">${opt("", "All months", f.month)}${months.map(m => opt(m, mLabel(m), f.month)).join("")}</select></label>
       <label class="field">Type<select id="tf-type">${[["", "Everything"], ["out", "Expenses"], ["in", "Income"], ["xfer", "Transfers"], ["uncat", "Uncategorized"], ["uncleared", "Not cleared"]].map(([v, l]) => opt(v, l, f.type)).join("")}</select></label>
@@ -975,8 +1051,8 @@ function vReports() {
     const srcCard = `<div class="card" style="margin-top:12px"><h3>Income by source</h3><p class="cap">${mLabel(ui.month)}</p>${srcRows.map(([k, v]) => `<div class="hbar"><span>${esc(k === "other" ? "Uncategorized income" : lbl(incById(k)))}</span><span class="num">${fmt(v)}</span><span class="track"><i style="width:${Math.max(2, v / srcMax * 100)}%;background:var(--good)"></i></span></div>`).join("") || `<div class="empty">No income recorded this month.</div>`}</div>`;
     body = `<div class="card"><h3>Income vs spending</h3><p class="cap">Budget accounts, transfers excluded</p>${svg}
       <div class="legend"><span><i style="background:var(--accent)"></i>Income</span><span><i style="background:var(--hi)"></i>Spending</span></div></div>
-      <div class="list" style="margin-top:12px">${d.slice().reverse().map(x => `<div class="li"><span class="main"><span class="t" style="display:block">${mLabel(x.m)}</span><span class="s" style="display:block">In ${fmt(x.inc)} · Out ${fmt(x.sp)}</span></span><span class="amt num ${x.inc - x.sp < 0 ? "neg" : "in"}">${fmt(x.inc - x.sp, { sign: true })}</span></div>`).join("")}</div>
-      ${srcCard}
+      <div class="rep-grid"><div class="list" style="margin-top:12px">${d.slice().reverse().map(x => `<div class="li"><span class="main"><span class="t" style="display:block">${mLabel(x.m)}</span><span class="s" style="display:block">In ${fmt(x.inc)} · Out ${fmt(x.sp)}</span></span><span class="amt num ${x.inc - x.sp < 0 ? "neg" : "in"}">${fmt(x.inc - x.sp, { sign: true })}</span></div>`).join("")}</div>
+      ${srcCard}</div>
       <p class="small muted" style="margin:10px 4px">Savings rate for ${mShort(cur.m)}: <b class="num">${cur.inc > 0 ? Math.round((cur.inc - cur.sp) / cur.inc * 100) + "%" : "—"}</b></p>`;
   } else {
     const ms = Array.from({ length: 12 }, (_, i) => addM(ui.month, i - 11)), d = ms.map(m => ({ m, v: netWorthAt(m) }));
@@ -1048,10 +1124,10 @@ let sheetRefresh = null;
 function openSheet(html, mount) {
   const r = $("#sheetRoot");
   r.innerHTML = `<div class="scrim" data-scrim><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div></div>`;
-  r.hidden = false; if (mount) mount(r.querySelector(".sheet"));
+  r.hidden = false; document.documentElement.classList.add("locked"); if (mount) mount(r.querySelector(".sheet"));
   const f = r.querySelector("[autofocus]"); if (f) setTimeout(() => f.focus(), 60);
 }
-function closeSheet() { const r = $("#sheetRoot"); r.hidden = true; r.innerHTML = ""; sheetRefresh = null; }
+function closeSheet() { const r = $("#sheetRoot"); r.hidden = true; r.innerHTML = ""; sheetRefresh = null; document.documentElement.classList.remove("locked"); }
 const shead = t => `<div class="shead"><h2>${t}</h2><button class="x" data-close aria-label="Close">✕</button></div>`;
 const acctOpts = (sel, filt = () => true) => S.meta.accounts.filter(a => !a.closed || a.id === sel).filter(filt).map(a => `<option value="${a.id}" ${a.id === sel ? "selected" : ""}>${esc(a.name)}</option>`).join("");
 function catOpts(sel, withIncome) {
@@ -1224,7 +1300,12 @@ function accountSheet(tab) {
       <button class="btn block" data-reset>Email me a password reset link</button>
       <button class="btn danger block" data-signout>Sign out</button>`, el => {
       el.addEventListener("click", async ev => {
-        if (ev.target.closest("[data-signout]")) { try { await AUTH.signOut(); closeSheet(); toast("Signed out"); } catch (e) { toast(authMsg(e)); } }
+        if (ev.target.closest("[data-signout]")) {
+          try { await AUTH.signOut(); closeSheet(); toast("Signed out"); } catch (e) { toast(authMsg(e)); return; }
+          /* don't leave the account's offline copy on this device */
+          try { await FS.terminate(); await FS.clearPersistence(); } catch (e) {}
+          setTimeout(() => location.reload(), 600);
+        }
         if (ev.target.closest("[data-reset]")) { try { await AUTH.sendPasswordResetEmail(USER.email); toast("Reset link sent to " + USER.email); } catch (e) { toast(authMsg(e)); } }
         if (ev.target.closest("[data-verify]")) { try { await USER.sendEmailVerification(); toast("Verification email sent"); } catch (e) { toast(authMsg(e)); } }
       });
@@ -1420,7 +1501,16 @@ document.addEventListener("click", e => {
     case "eraseyes": replaceAll(blank()); toast("All data erased"); break;
   }
 });
-document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#sheetRoot").hidden) closeSheet(); });
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && !$("#sheetRoot").hidden) { closeSheet(); return; }
+  /* desktop shortcuts, only when not typing and no sheet is open */
+  if (e.ctrlKey || e.metaKey || e.altKey || !$("#sheetRoot").hidden || !S) return;
+  const tg = e.target; if (tg.closest && tg.closest("input,select,textarea,[contenteditable]")) return;
+  if (e.key === "n" || e.key === "N") { e.preventDefault(); $("[data-act=newtx]")?.click(); }
+  else if (e.key === "/") { const q = $("#q"); if (q) { e.preventDefault(); q.focus(); } }
+  else if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && (ui.tab === "budget" || ui.tab === "reports")) { e.preventDefault(); ui.month = addM(ui.month, e.key === "ArrowLeft" ? -1 : 1); render(); }
+  else if (e.key >= "1" && e.key <= "5") { ui.tab = ["budget", "transactions", "accounts", "reports", "more"][+e.key - 1]; ui.acct = null; ui.q = ""; ui.limit = 150; render(); scrollTo(0, 0); }
+});
 document.addEventListener("input", e => { if (e.target.id === "q") { ui.q = e.target.value; const pos = e.target.selectionStart; render(); const q = $("#q"); q.focus(); q.setSelectionRange(pos, pos); } });
 document.addEventListener("change", e => {
   const t = e.target;
@@ -1443,6 +1533,30 @@ document.addEventListener("change", e => {
 /* ---------- boot ---------- */
 S = example(); mode = "example"; render();
 connect();
+
+/* app shortcut "Add transaction" (?new=tx): open the sheet once the real budget has loaded */
+let wantNew = new URLSearchParams(location.search).get("new") === "tx";
+if (wantNew) { try { history.replaceState(null, "", location.pathname); } catch (e) {} }
+(function openWhenReady(tries) {
+  if (!wantNew) return;
+  const ready = store === "local" ? !AUTH || authKnown : store !== "pending" && gotFirst;
+  if (ready && $("#sheetRoot").hidden) { wantNew = false; txSheet(null); return; }
+  if (tries < 50) setTimeout(() => openWhenReady(tries + 1), 200);
+})(0);
+
+/* phones suspend backgrounded apps: save straight away instead of waiting for the debounce */
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") { if (dirty.size && store !== "pending") { clearTimeout(flushTimer); flush(); } return; }
+  /* an app left open overnight still thinks it's yesterday; reload when idle so Today and the month are right */
+  if (localISO(new Date()) !== TODAY && !dirty.size && !flushing && $("#sheetRoot").hidden) location.reload();
+});
+addEventListener("pagehide", () => { if (dirty.size && store === "local") lsSet("et-data", JSON.stringify(S)); });
+addEventListener("online", renderTop); addEventListener("offline", renderTop);
+
+/* installable web app: cache the app so it opens offline (hosted site only) */
+if ("serviceWorker" in navigator && !window.claude && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
+  addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
 })();
 </script>
 

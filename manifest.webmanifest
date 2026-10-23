@@ -1,0 +1,21 @@
+{
+  "name": "Taka Koi?",
+  "short_name": "Taka Koi",
+  "description": "Zero-based envelope budgeting in taka.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#EEF2EF",
+  "theme_color": "#0E6B57",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Add transaction", "short_name": "Add", "url": "./?new=tx", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
