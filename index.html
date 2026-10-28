@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <title>Taka Koi?</title>
 <meta name="description" content="Zero-based envelope budgeting in taka.">
-<meta name="theme-color" content="#EEF2EF" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0D1412" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F4F5FB" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D0F1F" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Taka Koi">
@@ -35,28 +35,28 @@ window.TAKA_FIREBASE = {
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap">
 <style>
 /* Layout: one phone-width column; sticky month header, envelope list, fixed bottom tab bar, bottom sheets for every edit. */
 :root{
-  --bg:#EEF2EF; --surface:#FFFFFF; --sunk:#E3EAE6; --ink:#13201C; --muted:#5B6B65; --line:#D5DED9;
-  --accent:#0E6B57; --accent-ink:#FFFFFF; --hi:#E7B43E; --hi-ink:#3A2A00; --hi-soft:#FBEFCB;
-  --good:#1D8657; --good-soft:#DDF1E6; --warn:#B87A0C; --warn-soft:#FAEBC9; --bad:#C13E2B; --bad-soft:#F8DDD8;
-  --shadow:0 10px 30px rgba(14,40,32,.14);
-  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
-  --f-body:"Instrument Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
-  --f-num:"Spline Sans Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --bg:#F4F5FB; --surface:#FFFFFF; --sunk:#ECEEF7; --ink:#151933; --muted:#646B88; --line:#E3E6F1;
+  --accent:#5046E5; --accent-ink:#FFFFFF; --accent-2:#9B5CF6; --hi:#FFB547; --hi-ink:#3D2600; --hi-soft:#FFF3DE;
+  --good:#0E9F76; --good-soft:#DDF6EE; --warn:#C7790A; --warn-soft:#FDEFD6; --bad:#E0464F; --bad-soft:#FDE4E5;
+  --shadow:0 12px 32px rgba(32,36,90,.14); --lift:0 1px 2px rgba(32,36,90,.05),0 4px 14px rgba(32,36,90,.06);
+  --f-display:"Plus Jakarta Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Plus Jakarta Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-num:"Manrope",ui-sans-serif,system-ui,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0D1412; --surface:#151F1C; --sunk:#1C2824; --ink:#E4EDE9; --muted:#8FA29B; --line:#273530;
-  --accent:#3DBE95; --accent-ink:#04211A; --hi:#F0C25A; --hi-ink:#2E2100; --hi-soft:#3A3018;
-  --good:#47C688; --good-soft:#173528; --warn:#E3AA3D; --warn-soft:#3A2E14; --bad:#F06B57; --bad-soft:#3D1D18;
-  --shadow:0 10px 30px rgba(0,0,0,.5); color-scheme:dark}}
+  --bg:#0D0F1F; --surface:#161931; --sunk:#1F2340; --ink:#E9EBF8; --muted:#9BA1C2; --line:#292E4F;
+  --accent:#8B84FF; --accent-ink:#0D0F1F; --accent-2:#C084FC; --hi:#FFC266; --hi-ink:#2E1C00; --hi-soft:#33291A;
+  --good:#3DD6A3; --good-soft:#123329; --warn:#F2B04A; --warn-soft:#382A12; --bad:#FF6B73; --bad-soft:#3E1C22;
+  --shadow:0 12px 32px rgba(0,0,0,.55); --lift:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25); color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0D1412; --surface:#151F1C; --sunk:#1C2824; --ink:#E4EDE9; --muted:#8FA29B; --line:#273530;
-  --accent:#3DBE95; --accent-ink:#04211A; --hi:#F0C25A; --hi-ink:#2E2100; --hi-soft:#3A3018;
-  --good:#47C688; --good-soft:#173528; --warn:#E3AA3D; --warn-soft:#3A2E14; --bad:#F06B57; --bad-soft:#3D1D18;
-  --shadow:0 10px 30px rgba(0,0,0,.5); color-scheme:dark}
+  --bg:#0D0F1F; --surface:#161931; --sunk:#1F2340; --ink:#E9EBF8; --muted:#9BA1C2; --line:#292E4F;
+  --accent:#8B84FF; --accent-ink:#0D0F1F; --accent-2:#C084FC; --hi:#FFC266; --hi-ink:#2E1C00; --hi-soft:#33291A;
+  --good:#3DD6A3; --good-soft:#123329; --warn:#F2B04A; --warn-soft:#382A12; --bad:#FF6B73; --bad-soft:#3E1C22;
+  --shadow:0 12px 32px rgba(0,0,0,.55); --lift:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25); color-scheme:dark}
 html,body{background:var(--bg);color:var(--ink)}
 body{font-family:var(--f-body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -312,6 +312,49 @@ html.locked,html.locked body{overflow:hidden}
   .bud-side .chips{display:grid;grid-template-columns:1fr 1fr}
 }
 @media (min-width:1360px){.bud{grid-template-columns:minmax(0,1fr) 380px;gap:32px}}
+
+/* refreshed look: indigo palette, soft floating cards, gradient hero, frosted navigation */
+body{background:radial-gradient(1200px 500px at 50% -200px,color-mix(in srgb,var(--accent) 12%,transparent),transparent 70%) var(--bg) no-repeat}
+.num,.pill{font-feature-settings:"tnum";letter-spacing:0}
+.top{background:color-mix(in srgb,var(--bg) 82%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.brand em,.tabs .side-brand em{background:linear-gradient(120deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.month,.menu,.chip,.cats,.list,.acct-hero,.card,.worknote,.search{border-color:transparent;box-shadow:var(--lift)}
+.cats,.list{border-radius:20px}
+.card,.acct-hero{border-radius:22px}
+.chip{border-radius:14px;padding:9px 12px}
+.rta{border-radius:24px;padding:20px 22px;box-shadow:var(--lift);border-color:transparent}
+.rta.pos{background:linear-gradient(135deg,#4F46E5 0%,#8B5CF6 100%);color:#fff;box-shadow:0 14px 34px rgba(80,70,229,.32)}
+.rta.neg{background:linear-gradient(135deg,#E0464F,#F0784A);box-shadow:0 14px 34px rgba(224,70,79,.3)}
+.rta .go{background:rgba(255,255,255,.2);color:inherit;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.rta.pos .go:hover,.rta.neg .go:hover{background:rgba(255,255,255,.3)}
+.banner{border:0;border-left:4px solid var(--hi);border-radius:16px}
+.notice{border-radius:14px}
+.cat,.li,.iou{border-top-color:color-mix(in srgb,var(--line) 70%,transparent)}
+.bar{height:6px;border-radius:99px}
+.bar i,.hbar .track i{background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:99px}
+.bar.warn i{background:var(--warn)} .bar.bad i{background:var(--bad)}
+.ico{border-radius:12px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent)}
+.btn{border-radius:14px}
+.btn.pri,.acctbtn.me,.menu.on{background:linear-gradient(135deg,var(--accent),var(--accent-2));border-color:transparent}
+.btn.pri{box-shadow:0 6px 16px color-mix(in srgb,var(--accent) 30%,transparent)}
+.field input,.field select,.field textarea{border-radius:14px}
+.field input:focus,.field select:focus,.field textarea:focus,.search:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)}
+.scrim{background:rgba(10,12,35,.45);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.sheet{border-radius:28px 28px 0 0}
+.toast{border-radius:14px}
+@media (max-width:899px){
+  .tabs{left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));border:1px solid color-mix(in srgb,var(--line) 60%,transparent);border-radius:24px;padding:6px 8px;background:color-mix(in srgb,var(--surface) 80%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.4);backdrop-filter:blur(18px) saturate(1.4);box-shadow:var(--shadow)}
+  .tabs .add{background:linear-gradient(135deg,var(--accent),var(--accent-2));border-radius:18px;margin-top:-28px;box-shadow:0 10px 24px color-mix(in srgb,var(--accent) 40%,transparent)}
+  .app{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
+  .toast{bottom:calc(108px + env(safe-area-inset-bottom,0px))}
+}
+@media (min-width:900px){
+  .tabs{background:color-mix(in srgb,var(--surface) 70%,transparent);border-right-color:transparent;box-shadow:1px 0 0 var(--line)}
+  .tabs button.on{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+  .tabs .add{background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 8px 20px color-mix(in srgb,var(--accent) 30%,transparent)}
+  .tabs .add:hover{background:linear-gradient(135deg,var(--accent),var(--accent-2))}
+  .sheet{border-radius:28px}
+}
 </style>
 
 <div class="app">
