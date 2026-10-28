@@ -217,6 +217,12 @@ button.li:hover{background:var(--sunk)}
 .iou .bar{grid-column:1/3}
 .tag{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:6px;margin-right:6px;vertical-align:1px}
 .tag.lent{background:var(--good-soft);color:var(--good)} .tag.borrowed{background:var(--bad-soft);color:var(--bad)}
+.tag.fix{background:var(--warn-soft);color:var(--warn);margin:0 6px 0 0}
+.mv{flex:none;width:28px;height:30px;border:0;border-radius:8px;background:var(--sunk);color:var(--muted);font-size:13px;padding:0;display:grid;place-items:center}
+.mv:disabled{opacity:.3;cursor:default}
+.mv:not(:disabled):hover{color:var(--accent)}
+.sorthead{display:flex;align-items:center;gap:8px;margin:22px 4px 8px}
+.sorthead h2.sec{margin:0;margin-right:auto}
 .ib{border:0;background:var(--sunk);border-radius:8px;padding:6px 8px;font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
 .ib.del{color:var(--bad)}
 .empty{padding:28px 16px;text-align:center;color:var(--muted);font-size:14px}
@@ -499,6 +505,14 @@ function example() {
 const allCats = () => S.meta.groups.flatMap(g => g.cats);
 const catById = id => allCats().find(c => c.id === id);
 const acctById = id => S.meta.accounts.find(a => a.id === id);
+/* balance corrections: adjustments added while reconciling */
+const isAdj = t => t.adj || t.payee === "Reconciliation adjustment";
+const showAdj = () => S.meta.showAdj !== false;
+function adjOf(aid) { const l = allTx().filter(t => t.acct === aid && isAdj(t)); return l.length ? { n: l.length, sum: l.reduce((s, t) => s + t.amount, 0), last: l.reduce((d, t) => t.date > d ? t.date : d, "") } : null; }
+/* reorder: move an item one step within its list, or sort a list by name */
+function moveIn(list, id, d) { const i = list.findIndex(x => x.id === id), j = i + d; if (i < 0 || j < 0 || j >= list.length) return false; [list[i], list[j]] = [list[j], list[i]]; return true; }
+const byName = (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base", numeric: true });
+const mvBtns = (key, i, n, nm) => `<button class="mv" data-mv="${key}:-1" ${i ? "" : "disabled"} aria-label="Move ${esc(nm)} up">↑</button><button class="mv" data-mv="${key}:1" ${i < n - 1 ? "" : "disabled"} aria-label="Move ${esc(nm)} down">↓</button>`;
 const allTx = () => Object.values(S.tx).flat();
 const emojiOn = () => S.meta.showEmoji !== false;
 const lbl = o => (o && o.emoji && emojiOn() ? o.emoji + " " : "") + (o ? o.name : "");
@@ -805,11 +819,11 @@ function txRow(t) {
     const o = t.xfer ? null : (catById(t.cat) || incById(t.cat));
     const plainCat = o ? o.name : t.cat === "income" ? "Income" : catTxt;
     title = `<span style="${t.cat || t.xfer ? "" : "color:var(--warn)"}">${esc(plainCat)}</span>`;
-    sub = [t.payee || "No payee", a?.name, t.memo].filter(Boolean).map(esc).join(" · ");
+    sub = (showAdj() && isAdj(t) ? `<span class="tag fix">Correction</span>` : "") + [t.payee || "No payee", a?.name, t.memo].filter(Boolean).map(esc).join(" · ");
     icoTxt = o && o.emoji && emojiOn() ? o.emoji : (o ? o.name : t.xfer ? "⇄" : "?").replace(/[^A-Za-z0-9ঀ-৿⇄?]/g, "").slice(0, 2).toUpperCase() || "•";
   } else {
     title = esc(t.payee || "No payee");
-    sub = (t.xfer ? `Transfer · ${esc(a?.name || "")}` : `${esc(catTxt)}${showAcct ? " · " + esc(a?.name || "") : ""}`) + (t.memo ? " · " + esc(t.memo) : "");
+    sub = (showAdj() && isAdj(t) ? `<span class="tag fix">Correction</span>` : "") + (t.xfer ? `Transfer · ${esc(a?.name || "")}` : `${esc(catTxt)}${showAcct ? " · " + esc(a?.name || "") : ""}`) + (t.memo ? " · " + esc(t.memo) : "");
     icoTxt = (t.payee || "?").replace(/[^A-Za-z0-9ঀ-৿]/g, "").slice(0, 2).toUpperCase() || "•";
   }
   return `<div class="li"><button class="clr ${t.rec ? "lock" : t.cleared ? "on" : ""}" data-clr="${t.id}" aria-label="${t.rec ? "Reconciled" : t.cleared ? "Cleared" : "Not cleared"}" title="${t.rec ? "Reconciled" : "Tap to toggle cleared"}">${t.rec ? "🔒" : t.cleared ? "✓" : ""}</button>
@@ -875,12 +889,12 @@ function vAccounts() {
     return `<button class="back" data-act="acctback">‹ Accounts</button>
       <div class="acct-hero"><div class="small muted">${esc(title)}${a ? " · " + (a.onBudget ? "budget account" : "tracking account") : ""}</div>
       ${ui.acct !== "uncat" ? `<div class="big num">${fmt(bal)}</div>` : ""}
-      ${a ? `<div class="row"><span>Cleared <b class="num">${fmt(cbal)}</b></span><span>Uncleared <b class="num">${fmt(bal - cbal)}</b></span></div>` : ""}</div>
+      ${a ? `<div class="row"><span>Cleared <b class="num">${fmt(cbal)}</b></span><span>Uncleared <b class="num">${fmt(bal - cbal)}</b></span>${(() => { const f = showAdj() && adjOf(a.id); return f ? `<span style="color:var(--warn)">Corrected ${f.n}× · <b class="num">${fmt(f.sum, { sign: true })}</b> · last ${dLabel(f.last)}</span>` : ""; })()}</div>` : ""}</div>
       <div class="toolbar"><input class="search" id="q" type="search" placeholder="Search payee, category, amount" value="${esc(ui.q)}" aria-label="Search transactions">
       ${a ? `<button class="btn" data-act="reconcile">Reconcile</button>` : ""}</div>
       ${txList(list)}`;
   }
-  const row = a => `<button class="li" data-acct="${a.id}"><span class="ico">${esc(a.name.slice(0, 2).toUpperCase())}</span><span class="main"><span class="t" style="display:block">${esc(a.name)}</span><span class="s" style="display:block">${esc(a.type)}</span></span><span class="amt num ${(b[a.id] || 0) < 0 ? "neg" : ""}">${fmt(b[a.id] || 0)}</span></button>`;
+  const row = a => { const f = showAdj() && adjOf(a.id); return `<button class="li" data-acct="${a.id}"><span class="ico">${esc(a.name.slice(0, 2).toUpperCase())}</span><span class="main"><span class="t" style="display:block">${esc(a.name)}</span><span class="s" style="display:block">${f ? `<span class="tag fix" title="Balance corrected ${f.n} time${f.n > 1 ? "s" : ""}, last on ${esc(dLabel(f.last))}">Corrected ${fmt(f.sum, { sign: true })}</span>` : ""}${esc(a.type)}</span></span><span class="amt num ${(b[a.id] || 0) < 0 ? "neg" : ""}">${fmt(b[a.id] || 0)}</span></button>`; };
   const on = S.meta.accounts.filter(a => a.onBudget && !a.closed), off = S.meta.accounts.filter(a => !a.onBudget && !a.closed), closed = S.meta.accounts.filter(a => a.closed);
   const sum = l => l.reduce((s, a) => s + (b[a.id] || 0), 0);
   const nw = sum(S.meta.accounts);
@@ -1047,7 +1061,7 @@ function workCfg() {
 function lastSalary() {
   const salIds = new Set((S.meta.incomeCats || []).filter(c => /salary|wage|বেতন/i.test(c.name)).map(c => c.id));
   const order = []; for (let i = 1; i <= 12; i++) order.push(addM(CUR, -i)); order.push(CUR);
-  const sum = (m, test) => (S.tx[m] || []).reduce((a, t) => (t.xfer || t.amount <= 0 || t.payee === "Starting balance" || t.payee === "Reconciliation adjustment" || !test(t)) ? a : a + t.amount, 0);
+  const sum = (m, test) => (S.tx[m] || []).reduce((a, t) => (t.xfer || t.amount <= 0 || t.payee === "Starting balance" || isAdj(t) || !test(t)) ? a : a + t.amount, 0);
   for (const m of order) { const v = sum(m, t => salIds.has(t.cat)); if (v > 0) return { m, amt: v, kind: "salary" }; }
   for (const m of order) { const v = sum(m, t => isIncome(t.cat)); if (v > 0) return { m, amt: v, kind: "income" }; }
   return null;
@@ -1147,12 +1161,12 @@ function vReports() {
 function vMore() {
   const used = new Set(allTx().map(t => t.cat));
   const storeMsg = store === "cloud" ? `Signed in as ${esc(USER?.email || "")}. Your budget syncs across every device you sign in on.` : store === "local" && AUTH ? "Saved in this browser only. Sign in with your email to back it up and sync across devices." : store === "db" ? "Your budget is saved to your Claude account and syncs across your devices. Only you can see it." : store === "local" ? "Your budget is saved in this browser only. Export a backup regularly." : "Connecting…";
-  const cats = S.meta.groups.map(g => `<div style="margin-top:14px"><div class="list">
-      <div class="mgr-row">${emojiOn() ? `<button class="emo" data-emo="g:${g.id}" aria-label="Choose emoji for ${esc(g.name)}">${g.emoji ? esc(g.emoji) : "＋"}</button>` : ""}<input class="gname" value="${esc(g.name)}" data-gname="${g.id}" aria-label="Group name">${g.cats.length ? "" : `<button class="ib del" data-delgrp="${g.id}">Delete</button>`}</div>
-      ${g.cats.map(c => `<div class="mgr-row" style="padding-left:22px">${emojiOn() ? `<button class="emo" data-emo="c:${c.id}" aria-label="Choose emoji for ${esc(c.name)}">${c.emoji ? esc(c.emoji) : "＋"}</button>` : ""}<input value="${esc(c.name)}" data-cname="${c.id}" aria-label="Category name"><button class="ib" data-hide="${c.id}">${c.hidden ? "Show" : "Hide"}</button>${used.has(c.id) ? "" : `<button class="ib del" data-delcat="${c.id}">Delete</button>`}</div>`).join("")}
+  const cats = S.meta.groups.map((g, gi, G) => `<div style="margin-top:14px"><div class="list">
+      <div class="mgr-row">${mvBtns("g:" + g.id, gi, G.length, g.name)}${emojiOn() ? `<button class="emo" data-emo="g:${g.id}" aria-label="Choose emoji for ${esc(g.name)}">${g.emoji ? esc(g.emoji) : "＋"}</button>` : ""}<input class="gname" value="${esc(g.name)}" data-gname="${g.id}" aria-label="Group name">${g.cats.length > 1 ? `<button class="ib" data-sortcats="${g.id}" title="Sort categories A–Z">A–Z</button>` : ""}${g.cats.length ? "" : `<button class="ib del" data-delgrp="${g.id}">Delete</button>`}</div>
+      ${g.cats.map((c, ci) => `<div class="mgr-row" style="padding-left:22px">${mvBtns("c:" + c.id, ci, g.cats.length, c.name)}${emojiOn() ? `<button class="emo" data-emo="c:${c.id}" aria-label="Choose emoji for ${esc(c.name)}">${c.emoji ? esc(c.emoji) : "＋"}</button>` : ""}<input value="${esc(c.name)}" data-cname="${c.id}" aria-label="Category name"><button class="ib" data-hide="${c.id}">${c.hidden ? "Show" : "Hide"}</button>${used.has(c.id) ? "" : `<button class="ib del" data-delcat="${c.id}">Delete</button>`}</div>`).join("")}
       <div class="mgr-row" style="padding-left:22px"><input placeholder="+ New category in ${esc(g.name)}" data-newcat="${g.id}" aria-label="New category"></div>
     </div></div>`).join("");
-  const accts = S.meta.accounts.map(a => `<div class="mgr-row"><input value="${esc(a.name)}" data-aname="${a.id}" aria-label="Account name"><button class="ib" data-onb="${a.id}">${a.onBudget ? "Budget" : "Tracking"}</button><button class="ib" data-closeacct="${a.id}">${a.closed ? "Reopen" : "Close"}</button></div>`).join("");
+  const accts = S.meta.accounts.map((a, ai, A) => `<div class="mgr-row">${mvBtns("a:" + a.id, ai, A.length, a.name)}<input value="${esc(a.name)}" data-aname="${a.id}" aria-label="Account name"><button class="ib" data-onb="${a.id}">${a.onBudget ? "Budget" : "Tracking"}</button><button class="ib" data-closeacct="${a.id}">${a.closed ? "Reopen" : "Close"}</button></div>`).join("");
   return exampleBanner() + `
   <h2 class="sec">Storage</h2><div class="card" style="display:grid;gap:6px"><div id="syncline"></div><p>${storeMsg}</p>${AUTH ? `<button class="btn ${USER ? "" : "pri"}" data-act="account" style="justify-self:start">${USER ? "Account" : "Sign in or create account"}</button>` : ""}</div>
   ${(() => { const W = workCfg(), R = hourRate(); return `<h2 class="sec" id="work">Work time</h2><div class="card" style="display:grid;gap:12px">
@@ -1164,15 +1178,16 @@ function vMore() {
     <label class="toggle">Show on Budget tab<input id="work-budget" type="checkbox" ${W.budget ? "checked" : ""}></label>
     <label class="toggle">Show on Transactions tab<input id="work-tx" type="checkbox" ${W.tx ? "checked" : ""}></label>
   </div>`; })()}
-  <h2 class="sec">Display</h2><div class="card"><label class="toggle">Show emojis on categories<input id="emoji-toggle" type="checkbox" ${emojiOn() ? "checked" : ""}></label></div>
+  <h2 class="sec">Display</h2><div class="card"><div style="display:grid;gap:12px"><label class="toggle">Show emojis on categories<input id="emoji-toggle" type="checkbox" ${emojiOn() ? "checked" : ""}></label>
+    <label class="toggle"><span>Show balance corrections<br><span class="small muted">Mark accounts and transactions where the balance was adjusted while reconciling</span></span><input id="adj-toggle" type="checkbox" ${showAdj() ? "checked" : ""}></label></div></div>
   <h2 class="sec">Currency</h2><div class="card"><label class="field">Display currency<select id="cur">${CURRENCIES.map(c => `<option value="${c[0]}" ${S.meta.currency === c[0] ? "selected" : ""}>${c[2]}</option>`).join("")}</select></label></div>
-  <h2 class="sec">Categories</h2><p class="small muted" style="margin:0 4px">${emojiOn() ? "Tap the square to add an emoji. " : ""}Rename by editing. Categories with transactions can be hidden, not deleted.</p>
+  <div class="sorthead"><h2 class="sec">Categories</h2>${S.meta.groups.length > 1 ? `<button class="ib" data-act="sortgrps" title="Sort groups A–Z">Sort groups A–Z</button>` : ""}</div><p class="small muted" style="margin:0 4px">${emojiOn() ? "Tap the square to add an emoji. " : ""}Use ↑ ↓ to change the order. Rename by editing. Categories with transactions can be hidden, not deleted.</p>
   ${cats}
   <div class="toolbar"><input class="search" id="newgrp" placeholder="New category group" aria-label="New group"><button class="btn" data-act="addgrp">Add group</button></div>
   <h2 class="sec">Income categories</h2><p class="small muted" style="margin:0 4px 8px">Income in any of these goes to Ready to Assign. Use them to see where your money comes from.</p>
   <div class="list">${(S.meta.incomeCats || []).map(c => `<div class="mgr-row">${emojiOn() ? `<button class="emo" data-emo="i:${c.id}" aria-label="Choose emoji for ${esc(c.name)}">${c.emoji ? esc(c.emoji) : "＋"}</button>` : ""}<input value="${esc(c.name)}" data-iname="${c.id}" aria-label="Income category name">${used.has(c.id) ? "" : `<button class="ib del" data-delinc="${c.id}">Delete</button>`}</div>`).join("")}
     <div class="mgr-row"><input placeholder="+ New income category" data-newinc="1" aria-label="New income category"></div></div>
-  <h2 class="sec">Accounts</h2><div class="list">${accts || `<div class="empty">No accounts yet.</div>`}</div>
+  <div class="sorthead"><h2 class="sec">Accounts</h2>${S.meta.accounts.length > 1 ? `<button class="ib" data-act="sortaccts" title="Sort accounts A–Z">Sort A–Z</button>` : ""}</div><p class="small muted" style="margin:0 4px 8px">Use ↑ ↓ to change the order they appear in.</p><div class="list">${accts || `<div class="empty">No accounts yet.</div>`}</div>
   <h2 class="sec" id="backup">Backup &amp; Excel</h2><div class="card" style="display:grid;gap:10px">
     <h3 style="margin:0;font-size:15px;font-family:var(--f-display)">Excel</h3>
     <p class="small muted">Download everything as an Excel workbook: transactions, accounts, budget, and lent &amp; owed. Import it later to restore, or import a bank statement to add its transactions.</p>
@@ -1537,7 +1552,7 @@ function reconcileSheet(aid) {
         return;
       }
       const adj = e.target.closest("[data-radj]");
-      if (adj) { const k = putTx({ id: rid(), date: TODAY, acct: aid, payee: "Reconciliation adjustment", cat: a.onBudget ? "income" : null, amount: +adj.dataset.radj, memo: "", cleared: true }); markDirty(k, ...lock()); closeSheet(); render(); toast("Adjusted and reconciled"); }
+      if (adj) { const k = putTx({ id: rid(), date: TODAY, acct: aid, payee: "Reconciliation adjustment", cat: a.onBudget ? "income" : null, amount: +adj.dataset.radj, memo: "", cleared: true, adj: true }); markDirty(k, ...lock()); closeSheet(); render(); toast("Adjusted and reconciled"); }
     });
   });
 }
@@ -1880,6 +1895,12 @@ document.addEventListener("click", e => {
   const wm = el.closest("[data-wmode]"); if (wm) { workCfg().mode = wm.dataset.wmode; markDirty("meta"); render(); return; }
   const rep = el.closest("[data-rep]"); if (rep) { ui.report = rep.dataset.rep; render(); return; }
   const h = (sel, fn) => { const b = el.closest(sel); if (b) { fn(b); return true; } return false; };
+  if (h("[data-mv]", b => {
+    const [k, id, d] = b.dataset.mv.split(":");
+    const list = k === "g" ? S.meta.groups : k === "a" ? S.meta.accounts : S.meta.groups.find(g => g.cats.some(c => c.id === id))?.cats;
+    if (list && moveIn(list, id, +d)) { markDirty("meta"); render(); const nb = document.querySelector(`[data-mv="${b.dataset.mv}"]:not(:disabled)`) || document.querySelector(`[data-mv^="${k}:${id}:"]:not(:disabled)`); nb?.focus({ preventScroll: true }); }
+  })) return;
+  if (h("[data-sortcats]", b => { const g = S.meta.groups.find(x => x.id === b.dataset.sortcats); g.cats.sort(byName); markDirty("meta"); render(); toast(`${g.name} sorted A–Z`); })) return;
   if (h("[data-hide]", b => { const c = catById(b.dataset.hide); c.hidden = !c.hidden; markDirty("meta"); render(); })) return;
   if (h("[data-delinc]", b => { S.meta.incomeCats = S.meta.incomeCats.filter(c => c.id !== b.dataset.delinc); markDirty("meta"); render(); toast("Income category deleted"); })) return;
   if (h("[data-delcat]", b => { const id = b.dataset.delcat; S.meta.groups.forEach(g => g.cats = g.cats.filter(c => c.id !== id)); Object.values(S.meta.assigned).forEach(o => delete o[id]); markDirty("meta"); render(); toast("Category deleted"); })) return;
@@ -1921,6 +1942,8 @@ document.addEventListener("click", e => {
     case "addacct": acctSheet(); break;
     case "reconcile": reconcileSheet(ui.acct); break;
     case "more": ui.limit += 150; render(); break;
+    case "sortgrps": S.meta.groups.sort(byName); markDirty("meta"); render(); toast("Groups sorted A–Z"); break;
+    case "sortaccts": S.meta.accounts.sort(byName); markDirty("meta"); render(); toast("Accounts sorted A–Z"); break;
     case "addgrp": { const i = $("#newgrp"); const n = i.value.trim(); if (!n) { i.focus(); break; } S.meta.groups.push({ id: rid(), name: n, cats: [] }); markDirty("meta"); render(); toast("Group added"); break; }
     case "export": exportSheet(); break;
     case "xlsxout": exportXLSX(); break;
@@ -1961,6 +1984,7 @@ document.addEventListener("change", e => {
   if (t.id === "work-dpm") { const v = parseInt(t.value, 10); workCfg().dpm = v > 0 && v <= 31 ? v : 22; markDirty("meta"); render(); return; }
   if (t.id === "work-budget") { workCfg().budget = t.checked; markDirty("meta"); render(); return; }
   if (t.id === "work-tx") { workCfg().tx = t.checked; markDirty("meta"); render(); return; }
+  if (t.id === "adj-toggle") { S.meta.showAdj = t.checked; markDirty("meta"); render(); toast(t.checked ? "Showing balance corrections" : "Balance corrections hidden"); return; }
   if (t.id === "emoji-toggle") { S.meta.showEmoji = t.checked; markDirty("meta"); render(); toast(t.checked ? "Emojis on" : "Emojis off"); return; }
   if (t.dataset.iname) { const c = incById(t.dataset.iname); const v = t.value.trim(); if (v) { c.name = v; markDirty("meta"); } else t.value = c.name; return; }
   if (t.dataset.newinc) { const v = t.value.trim(); if (!v) return; S.meta.incomeCats.push({ id: "inc-" + rid(), name: v, emoji: "" }); markDirty("meta"); render(); toast("Income category added"); return; }
