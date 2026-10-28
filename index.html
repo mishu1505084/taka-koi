@@ -2,19 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Taka Koi?</title>
 <meta name="description" content="Zero-based envelope budgeting in taka.">
-<meta name="theme-color" content="#EEF2EF" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0D1412" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#0E6B57">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Taka Koi">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="application-name" content="Taka Koi">
-<meta name="format-detection" content="telephone=no">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Taka Koi?">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23E7B43E'/%3E%3Ccircle cx='16' cy='16' r='11.2' fill='none' stroke='%233A2A00' stroke-opacity='.55'/%3E%3Ctext x='16' y='21.6' text-anchor='middle' font-size='15' font-weight='700' fill='%233A2A00'%3E%E0%A7%B3%3C/text%3E%3C/svg%3E">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -249,69 +243,6 @@ button.worknote:hover{border-color:var(--accent)}
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:500;z-index:30;max-width:calc(100% - 32px);box-shadow:var(--shadow)}
 .muted{color:var(--muted)} .small{font-size:12px}
 p{margin:0}
-
-/* app feel on phones: no tap flash or double-tap zoom, no background scroll behind sheets */
-html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
-button,a,label,select,input{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-.tabs,.top,.ghead,.seg{-webkit-user-select:none;user-select:none}
-html.locked,html.locked body{overflow:hidden}
-.sheet{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
-.ptitle{display:none}
-@media (max-width:899px){.dk{display:none!important}}
-.top .month{margin-left:auto}
-/* iOS zooms into any field under 16px, so touch screens get 16px text in every input */
-@media (pointer:coarse){.search,.mgr-row input,.field input,.field select{font-size:16px}}
-@media (hover:none){.cat:active,button.li:active,.iou:active,.btn:active{background:var(--sunk)}.btn.pri:active{background:var(--accent);filter:brightness(.92)}}
-.tfgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
-@media (max-width:519px){.btn.wide{display:none}.tfgrid{grid-template-columns:1fr 1fr}.tfgrid>:first-child{grid-column:1/-1}}
-@media (max-width:479px){.top:has(.acctbtn) .brand span{display:none}}
-@media (max-width:379px){.brand span{display:none}.month span{min-width:70px;font-size:13px}.month button{width:28px;height:28px}.chip{flex-basis:70px}.rta strong{font-size:30px}}
-@media (max-width:339px){.brand{display:none}.tabs button{font-size:9.5px}}
-@media (display-mode:standalone){.toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}}
-
-/* desktop: sidebar navigation, wider content, budget summary beside the categories, dialogs centred */
-@media (min-width:900px){
-  body{padding-left:calc(240px + 40px);padding-right:40px}
-  .app{max-width:1060px;padding-bottom:56px}
-  .mb{display:none!important}
-  .top{padding-block:18px 14px}
-  .ptitle{display:block;margin:0 auto 0 0;font-family:var(--f-display);font-weight:800;font-size:26px;letter-spacing:-.02em}
-  .top .month{margin-left:0}
-  .tabs{top:0;right:auto;width:240px;border-top:0;border-right:1px solid var(--line);padding:18px 14px calc(18px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));overflow-y:auto}
-  .tabs .in{display:flex;flex-direction:column;align-items:stretch;gap:2px;max-width:none;min-height:100%}
-  .tabs .side-brand{order:-3;display:flex!important;align-items:center;gap:9px;font-family:var(--f-display);font-weight:800;font-size:21px;letter-spacing:-.02em;padding:4px 10px 18px}
-  .tabs .side-brand svg{width:30px;height:30px}
-  .tabs .side-brand em{font-style:normal;color:var(--accent)}
-  .tabs button{flex-direction:row;justify-content:flex-start;gap:12px;font-size:14.5px;padding:10px 12px;border-radius:12px;letter-spacing:0;color:var(--ink)}
-  .tabs button svg{color:var(--muted)}
-  .tabs button:hover{background:var(--sunk)}
-  .tabs button.on{background:var(--sunk);color:var(--accent)}
-  .tabs button.on svg{color:var(--accent)}
-  .tabs .add{order:-2;width:auto;height:auto;margin:0 0 14px;display:flex;justify-content:center;gap:8px;border-radius:12px;padding:11px 14px;box-shadow:none;color:var(--accent-ink)}
-  .tabs .add svg{width:20px;height:20px;color:inherit}
-  .tabs .add:hover{background:var(--accent);filter:brightness(1.07)}
-  .tabs .side-more{margin-top:auto}
-  .tabs .keys{font-size:12px;color:var(--muted);padding:12px 12px 0;line-height:1.6}
-  .tabs .keys kbd{font-family:var(--f-num);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--bg)}
-  .rta strong{font-size:38px}
-  .cat{padding:12px 16px}
-  .rep-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
-  .rep-grid>*{margin-top:0!important}
-  .toast{bottom:28px;left:calc(50% + 120px)}
-  .scrim{align-items:center;padding:32px}
-  .sheet{max-width:560px;max-height:min(88vh,920px);border-radius:22px;padding:20px 26px 26px;animation:pop .16s ease-out}
-  .sheet .grab{display:none}
-  @keyframes pop{from{transform:scale(.97);opacity:0}}
-  .chart{max-height:300px}
-}
-@media (min-width:1180px){
-  .bud{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
-  .bud-side{grid-column:2;grid-row:1;position:sticky;top:84px}
-  .bud-main{grid-column:1;grid-row:1}
-  .bud-main>.group:first-child{margin-top:0}
-  .bud-side .chips{display:grid;grid-template-columns:1fr 1fr}
-}
-@media (min-width:1360px){.bud{grid-template-columns:minmax(0,1fr) 380px;gap:32px}}
 </style>
 
 <div class="app">
@@ -534,7 +465,7 @@ function ageOfMoney() {
 let DB = null, UID = null, unsub = null, pendingSnap = null, knownDocs = new Set(), gotFirst = false;
 let docRef = k => DB.doc("data/users/" + UID + "/" + k);
 /* email login (hosted site only): Firebase Auth + Firestore, enabled when window.TAKA_FIREBASE holds a config */
-let AUTH = null, FS = null, USER = null, uploadedLocal = false, authKnown = false;
+let AUTH = null, FS = null, USER = null, uploadedLocal = false;
 const dirty = new Set(); let flushTimer = null, flushing = false;
 
 function markDirty(...keys) {
@@ -593,9 +524,8 @@ async function connect() {
     try {
       firebase.initializeApp(window.TAKA_FIREBASE);
       AUTH = firebase.auth(); FS = firebase.firestore();
-      try { FS.enablePersistence({ synchronizeTabs: true }).catch(() => {}); } catch (e) {}
       loadLocal(); store = "local"; render();
-      AUTH.onAuthStateChanged(u => { authKnown = true; if (u) startCloud(u); else stopCloud(); });
+      AUTH.onAuthStateChanged(u => { if (u) startCloud(u); else stopCloud(); });
     } catch (e) { AUTH = null; loadLocal(); store = "local"; render(); }
   } else {
     store = "local"; loadLocal(); render();
@@ -612,15 +542,12 @@ function startCloud(u) {
   if (store === "local" && dirty.size) { lsSet("et-data", JSON.stringify(S)); dirty.clear(); }
   clearTimeout(flushTimer);
   USER = u; UID = u.uid; store = "cloud"; gotFirst = false; knownDocs = new Set(); pendingSnap = null; syncState = "busy";
-  bk.list = null; bk.err = ""; bk.checked = 0;
   docRef = k => FS.doc("takakoi/" + UID + "/data/" + k);
   if (unsub) unsub();
   unsub = FS.collection("takakoi/" + UID + "/data").onSnapshot({ includeMetadataChanges: true }, snap => {
-    /* a cached copy with data is fine to show (offline start); an empty cache waits for the server before deciding the account is empty */
-    if (!gotFirst && snap.metadata.fromCache && !snap.docs.some(d => d.id === "meta")) return;
+    if (!gotFirst && snap.metadata.fromCache) return;   /* wait for the server before deciding the account is empty */
     if (syncState === "busy" && !dirty.size && !flushing) syncState = "idle";
     applySnap(snap);
-    if (!snap.metadata.fromCache && !bk.checked) setTimeout(autoBackup, 5000);
   }, () => { syncState = "err"; renderTop(); toast("Couldn't reach your account. Check your connection."); });
   render();
 }
@@ -628,7 +555,6 @@ function stopCloud() {
   if (store !== "cloud") { USER = null; render(); return; }
   if (unsub) unsub(); unsub = null;
   USER = null; UID = null; store = "local"; gotFirst = false; dirty.clear(); pendingSnap = null; syncState = "idle";
-  bk.list = null; bk.err = "";
   loadLocal(); render();
 }
 function replaceAll(next) {
@@ -659,24 +585,19 @@ const ICONS = {
 };
 function renderTabs() {
   const b = (k, l) => `<button data-tab="${k}" class="${ui.tab === k ? "on" : ""}" aria-label="${l}">${ICONS[k]}${l}</button>`;
-  $("#tabs").innerHTML = `<div class="side-brand dk">${COIN}<span>Taka Koi<em>?</em></span></div>`
-    + b("budget", "Budget") + b("transactions", "Transactions") + `<button class="add" data-act="newtx" aria-label="Add transaction" title="Add transaction (N)">${ICONS.add}<span class="dk">Add transaction</span></button>` + b("accounts", "Accounts") + b("reports", "Reports")
-    + `<button data-tab="more" class="side-more dk ${ui.tab === "more" ? "on" : ""}" aria-label="More: settings, categories, backup">${ICONS.more}Settings${syncState === "err" ? ` <span style="color:var(--bad)">●</span>` : ""}</button>`
-    + `<p class="keys dk"><kbd>N</kbd> add transaction<br><kbd>/</kbd> search · <kbd>←</kbd> <kbd>→</kbd> month</p>`;
+  $("#tabs").innerHTML = b("budget", "Budget") + b("transactions", "Transactions") + `<button class="add" data-act="newtx" aria-label="Add transaction">${ICONS.add}</button>` + b("accounts", "Accounts") + b("reports", "Reports");
 }
 function renderTop() {
   if (!S) return;
   const showMonth = ui.tab === "budget" || ui.tab === "reports";
   let sc = "", st = "";
   if (mode === "example") { st = "Example"; }
-  else if ((store === "cloud" || store === "db") && !navigator.onLine) { sc = "busy"; st = dirty.size || flushing ? "Offline · will sync" : "Offline"; }
   else if (syncState === "busy") { sc = "busy"; st = "Saving"; }
   else if (syncState === "err") { sc = "err"; st = "Not saved"; }
   else if (store === "db" || store === "cloud") { sc = "ok"; st = "Synced"; }
   else if (store === "local") { sc = "ok"; st = "This browser"; }
   else { st = "Loading"; }
-  const TITLES = { budget: "Budget", transactions: "Transactions", accounts: "Accounts", reports: "Reports", more: "Settings" };
-  $("#top").innerHTML = `<button class="menu mb ${ui.tab === "more" ? "on" : ""}" data-tab="more" aria-label="More: settings, categories, backup" title="More">${ICONS.more}${syncState === "err" ? "<i></i>" : ""}</button><div class="brand mb">${COIN}<span>Taka Koi<em>?</em></span></div><h1 class="ptitle">${TITLES[ui.tab] || ""}</h1>
+  $("#top").innerHTML = `<button class="menu ${ui.tab === "more" ? "on" : ""}" data-tab="more" aria-label="More: settings, categories, backup" title="More">${ICONS.more}${syncState === "err" ? "<i></i>" : ""}</button><div class="brand">${COIN}<span>Taka Koi<em>?</em></span></div>
     ${showMonth ? `<div class="month"><button data-act="mprev" aria-label="Previous month">‹</button><span>${mLabel(ui.month)}</span><button data-act="mnext" aria-label="Next month">›</button></div>` : ""}
     ${AUTH ? (USER ? `<button class="acctbtn me" data-act="account" aria-label="Account: ${esc(USER.email || "")}" title="${esc(USER.email || "")}">${esc((USER.email || "?").slice(0, 1).toUpperCase())}</button>` : `<button class="acctbtn" data-act="account">Sign in</button>`) : ""}`;
   const ss = document.getElementById("syncline"); if (ss) ss.innerHTML = `<span class="sync ${sc}"><b></b>${st}</span>`;
@@ -732,7 +653,7 @@ function vBudget() {
   const rtaCls = B.rta > 0 ? "pos" : B.rta < 0 ? "neg" : "";
   const sub = B.rta > 0 ? "Give these taka a job" : B.rta < 0 ? "You assigned more than you have" : "Every taka has a job";
   const aom = ageOfMoney();
-  return exampleBanner() + `<div class="bud"><div class="bud-side">
+  return exampleBanner() + `
   <section class="rta ${rtaCls}">
     <div><span class="lbl">Ready to Assign</span><strong class="num">${fmt(B.rta)}</strong><span class="sub">${sub}</span></div>
     <button class="go" data-act="auto" ${under > 0 ? "" : "disabled"}>${under > 0 ? `Fund targets<br><span class="num">${fmt(under)}</span>` : "Targets funded"}</button>
@@ -747,8 +668,7 @@ function vBudget() {
   </div>
   ${!W.budget ? "" : WR ? `<div class="worknote"><span class="clock" aria-hidden="true">⏱</span><p>Spending in ${mLabel(m)} took <b>${workTime(spentAll, WR) || "no time"}</b> of work.<br><span class="small muted">Your time ≈ <span class="num">${fmt(Math.round(WR.r / 100) * 100)}</span>/hr · ${esc(rateSrc(WR))}</span></p></div>`
     : `<button class="worknote" data-act="gowork"><span class="clock" aria-hidden="true">⏱</span><p>See your spending as hours of work. <b>Add your income</b></p></button>`}
-  </div><div class="bud-main">
-  ${groups || `<div class="empty">No categories yet. Add some under More.</div>`}</div></div>`;
+  ${groups || `<div class="empty">No categories yet. Add some under More.</div>`}`;
 }
 
 function txRow(t) {
@@ -808,9 +728,9 @@ function vTransactions() {
     <div class="acct-hero"><div class="small muted">${list.length} transaction${list.length === 1 ? "" : "s"}${active ? " match your filters" : ""}</div>
       <div class="row" style="font-size:13px;margin-top:6px"><span>In <b class="num" style="color:var(--good)">${fmt(inflow)}</b></span><span>Out <b class="num" style="color:var(--bad)">${fmt(-outflow)}</b>${WT ? ` <span class="muted">≈ ${WT} of work</span>` : ""}</span><span>Net <b class="num">${fmt(inflow + outflow, { sign: true })}</b></span></div>
       <p class="small muted" style="margin-top:4px">Transfers between your own accounts aren't counted in these totals.</p></div>
-    <div class="toolbar"><input class="search" id="q" type="search" placeholder="Search payee, category, memo, amount" value="${esc(ui.q)}" aria-label="Search transactions"><button class="btn ${W.tx ? "on" : ""}" data-act="toggletxwork" aria-pressed="${W.tx}" title="Show work time for each expense">⏱ Work time</button><button class="btn pri wide" data-act="newtx">Add</button></div>
+    <div class="toolbar"><input class="search" id="q" type="search" placeholder="Search payee, category, memo, amount" value="${esc(ui.q)}" aria-label="Search transactions"><button class="btn ${W.tx ? "on" : ""}" data-act="toggletxwork" aria-pressed="${W.tx}" title="Show work time for each expense">⏱ Work time</button><button class="btn pri" data-act="newtx">Add</button></div>
     ${W.tx && !TR ? `<p class="notice" style="background:var(--hi-soft);color:var(--hi-ink)">No salary found yet. <button class="btn small" data-act="gowork">Add your income</button></p>` : ""}
-    <div class="grid2 tfgrid" style="margin-top:8px">
+    <div class="grid2" style="margin-top:8px;grid-template-columns:repeat(3,minmax(0,1fr))">
       <label class="field">Account<select id="tf-acct">${opt("", "All accounts", f.acct)}${S.meta.accounts.map(a => opt(a.id, a.name, f.acct)).join("")}</select></label>
       <label class="field">Month<select id="tf-month">${opt("", "All months", f.month)}${months.map(m => opt(m, mLabel(m), f.month)).join("")}</select></label>
       <label class="field">Type<select id="tf-type">${[["", "Everything"], ["out", "Expenses"], ["in", "Income"], ["xfer", "Transfers"], ["uncat", "Uncategorized"], ["uncleared", "Not cleared"]].map(([v, l]) => opt(v, l, f.type)).join("")}</select></label>
@@ -870,6 +790,18 @@ function iouMove(acctId, kind, amount, date, label, out) {
     putTx({ id: rid(), date, acct: h.id, payee: "Transfer: " + A.name, cat: null, amount: -amt, memo: label, cleared: true, xfer: acctId, xid }),
   ];
 }
+function iouCreate(k, person, amt, date, due, note, acct) {
+  (S.meta.ious ||= []).push({ id: rid(), kind: k, person, amount: amt, date, due: due || null, note, acct, closed: false, payments: [] });
+  const keys = ["meta"];
+  if (acct) keys.push(...iouMove(acct, k, amt, date, (k === "lent" ? "Lent to " : "Borrowed from ") + person, k === "lent"));
+  return keys;
+}
+function iouRepay(e, amt, date, acct) {
+  (e.payments ||= []).push({ id: rid(), date, amount: amt });
+  const keys = ["meta"];
+  if (acct) keys.push(...iouMove(acct, e.kind, amt, date, (e.kind === "lent" ? "Repaid by " : "Repaid to ") + e.person, e.kind === "borrowed"));
+  return keys;
+}
 function vIous() {
   const list = S.meta.ious ||= [];
   const open = list.filter(iouOpen), done = list.filter(e => !iouOpen(e));
@@ -891,9 +823,9 @@ function vIous() {
   };
   return `<div class="acct-hero"><div class="small muted">Net position with people</div><div class="big num" style="color:${toMe - iOwe < 0 ? "var(--bad)" : "inherit"}">${fmt(toMe - iOwe, { sign: true })}</div>
       <div class="row"><span>People owe you <b class="num">${fmt(toMe)}</b></span><span>You owe <b class="num">${fmt(iOwe)}</b></span>${overdue ? `<span style="color:var(--bad)">${overdue} overdue</span>` : ""}</div></div>
-    <div class="toolbar"><button class="btn pri" data-act="newlend">I lent money</button><button class="btn" data-act="newborrow">I borrowed money</button></div>
+    <p class="small muted" style="margin:10px 4px 0">Add lending, borrowing and repayments with the + button. Tap a record to change it.</p>
     ${ppl.length ? ppl.map(p => `<section class="person"><div class="ph"><h3>${esc(p.name)}</h3><span class="pill ${p.net > 0 ? "good" : p.net < 0 ? "bad" : ""}">${p.net > 0 ? "owes you " + fmt(p.net) : p.net < 0 ? "you owe " + fmt(-p.net) : "even"}</span></div><div class="list">${p.items.sort((a, b) => a.date < b.date ? -1 : 1).map(row).join("")}</div></section>`).join("")
-      : `<div class="empty" style="margin-top:12px">Nothing outstanding. Record money you lend or borrow and track repayments here.</div>`}
+      : `<div class="empty" style="margin-top:12px">Nothing outstanding. Use the + button and choose Lend / Borrow to record money you lend or borrow.</div>`}
     ${done.length ? `<h2 class="sec">Settled</h2><div class="list">${done.sort((a, b) => a.date < b.date ? 1 : -1).slice(0, 30).map(row).join("")}</div>` : ""}`;
 }
 const IOU_FIELDS = ["i-amt", "i-person", "i-note", "i-date", "i-due", "i-acct"];
@@ -942,11 +874,13 @@ function iouSheet(id, kind) {
         <label class="field">${e.kind === "lent" ? "Received into" : "Paid from"}<select id="p-acct"><option value="">Don't record in an account</option>${acctOpts(e.acct, a => !a.helper)}</select></label>
         <button class="btn pri block" data-pay>Record repayment</button></div>` : `<p class="notice" style="background:var(--good-soft);color:var(--good)">Settled.</p>`}
       ${(e.payments || []).length ? `<h3 style="margin:0;font-size:15px;font-family:var(--f-display)">Repayments</h3><div class="list">${e.payments.slice().sort((a, b) => a.date < b.date ? 1 : -1).map(p => `<div class="li"><span class="main"><span class="t" style="display:block">${dLabel(p.date)}</span></span><span class="amt num in">${fmt(p.amount)}</span><button class="ib del" data-unpay="${p.id}">Remove</button></div>`).join("")}</div>` : ""}
-      <div class="grid2"><label class="field">Due by<input id="e-due" type="date" value="${e.due || ""}"></label><label class="field">What for<input id="e-note" value="${esc(e.note || "")}"></label></div>
+      <div class="grid2"><label class="field">${e.kind === "lent" ? "Lent to" : "Borrowed from"}<input id="e-person" value="${esc(e.person)}"></label><label class="field">Amount<input id="e-amt" class="num" inputmode="decimal" value="${plain(e.amount)}"></label></div>
+      <div class="grid2"><label class="field">Date<input id="e-date" type="date" value="${e.date}"></label><label class="field">Due by<input id="e-due" type="date" value="${e.due || ""}"></label></div>
+      <div class="grid2" style="grid-template-columns:1fr"><label class="field">What for<input id="e-note" value="${esc(e.note || "")}"></label></div>
       <button class="btn block" data-esave>Save details</button>
       <button class="btn block" data-settle>${open ? "Mark as settled" : "Reopen"}</button>
       <div id="idel"><button class="btn danger block" data-idel>Delete record</button></div>
-      <p class="small muted">Removing a repayment or deleting a record doesn't undo account transactions it created. Edit those under Accounts.</p>`;
+      <p class="small muted">Changing the amount, removing a repayment or deleting a record doesn't change account transactions it created. Edit those under Transactions.</p>`;
   };
   const redraw = () => { const el = $("#sheetRoot .sheet"); if (!el) return; el.innerHTML = '<div class="grab"></div>' + draw(); };
   openSheet(draw(), el => {
@@ -962,7 +896,15 @@ function iouSheet(id, kind) {
         markDirty(...new Set(keys)); render(); redraw(); toast(iouLeft(e) <= 0 ? "Fully repaid and settled" : `Recorded ${fmt(amt)}`); return;
       }
       const up = ev.target.closest("[data-unpay]"); if (up) { e.payments = e.payments.filter(p => p.id !== up.dataset.unpay); markDirty("meta"); render(); redraw(); toast("Repayment removed"); return; }
-      if (ev.target.closest("[data-esave]")) { e.due = el.querySelector("#e-due").value || null; e.note = el.querySelector("#e-note").value.trim(); markDirty("meta"); render(); redraw(); toast("Saved"); return; }
+      if (ev.target.closest("[data-esave]")) {
+        const person = el.querySelector("#e-person").value.trim(), amt = parseAmt(el.querySelector("#e-amt").value);
+        if (!person) { toast("Add the person's name."); return; }
+        if (!amt || amt <= 0) { toast("Enter an amount above zero."); return; }
+        if (amt < iouPaid(e)) { toast(`Amount can't be less than the ${fmt(iouPaid(e))} already repaid.`); return; }
+        e.person = person; e.amount = amt; e.date = el.querySelector("#e-date").value || e.date;
+        e.due = el.querySelector("#e-due").value || null; e.note = el.querySelector("#e-note").value.trim();
+        markDirty("meta"); render(); redraw(); toast("Saved"); return;
+      }
       if (ev.target.closest("[data-settle]")) { e.closed = iouOpen(e); markDirty("meta"); render(); redraw(); toast(e.closed ? "Marked as settled" : "Reopened"); return; }
       if (ev.target.closest("[data-idel]")) { el.querySelector("#idel").innerHTML = `<div class="confirm">Delete this record?<button class="btn danger small" data-idelyes>Delete</button><button class="btn small" data-idelno>Keep</button></div>`; return; }
       if (ev.target.closest("[data-idelno]")) { redraw(); return; }
@@ -1055,8 +997,8 @@ function vReports() {
     const srcCard = `<div class="card" style="margin-top:12px"><h3>Income by source</h3><p class="cap">${mLabel(ui.month)}</p>${srcRows.map(([k, v]) => `<div class="hbar"><span>${esc(k === "other" ? "Uncategorized income" : lbl(incById(k)))}</span><span class="num">${fmt(v)}</span><span class="track"><i style="width:${Math.max(2, v / srcMax * 100)}%;background:var(--good)"></i></span></div>`).join("") || `<div class="empty">No income recorded this month.</div>`}</div>`;
     body = `<div class="card"><h3>Income vs spending</h3><p class="cap">Budget accounts, transfers excluded</p>${svg}
       <div class="legend"><span><i style="background:var(--accent)"></i>Income</span><span><i style="background:var(--hi)"></i>Spending</span></div></div>
-      <div class="rep-grid"><div class="list" style="margin-top:12px">${d.slice().reverse().map(x => `<div class="li"><span class="main"><span class="t" style="display:block">${mLabel(x.m)}</span><span class="s" style="display:block">In ${fmt(x.inc)} · Out ${fmt(x.sp)}</span></span><span class="amt num ${x.inc - x.sp < 0 ? "neg" : "in"}">${fmt(x.inc - x.sp, { sign: true })}</span></div>`).join("")}</div>
-      ${srcCard}</div>
+      <div class="list" style="margin-top:12px">${d.slice().reverse().map(x => `<div class="li"><span class="main"><span class="t" style="display:block">${mLabel(x.m)}</span><span class="s" style="display:block">In ${fmt(x.inc)} · Out ${fmt(x.sp)}</span></span><span class="amt num ${x.inc - x.sp < 0 ? "neg" : "in"}">${fmt(x.inc - x.sp, { sign: true })}</span></div>`).join("")}</div>
+      ${srcCard}
       <p class="small muted" style="margin:10px 4px">Savings rate for ${mShort(cur.m)}: <b class="num">${cur.inc > 0 ? Math.round((cur.inc - cur.sp) / cur.inc * 100) + "%" : "—"}</b></p>`;
   } else {
     const ms = Array.from({ length: 12 }, (_, i) => addM(ui.month, i - 11)), d = ms.map(m => ({ m, v: netWorthAt(m) }));
@@ -1108,12 +1050,7 @@ function vMore() {
   <div class="list">${(S.meta.incomeCats || []).map(c => `<div class="mgr-row">${emojiOn() ? `<button class="emo" data-emo="i:${c.id}" aria-label="Choose emoji for ${esc(c.name)}">${c.emoji ? esc(c.emoji) : "＋"}</button>` : ""}<input value="${esc(c.name)}" data-iname="${c.id}" aria-label="Income category name">${used.has(c.id) ? "" : `<button class="ib del" data-delinc="${c.id}">Delete</button>`}</div>`).join("")}
     <div class="mgr-row"><input placeholder="+ New income category" data-newinc="1" aria-label="New income category"></div></div>
   <h2 class="sec">Accounts</h2><div class="list">${accts || `<div class="empty">No accounts yet.</div>`}</div>
-  <h2 class="sec" id="backup">Backup &amp; Excel</h2><div class="card" style="display:grid;gap:10px">
-    <h3 style="margin:0;font-size:15px;font-family:var(--f-display)">Excel</h3>
-    <p class="small muted">Download everything as an Excel workbook: transactions, accounts, budget, and lent &amp; owed. Import it later to restore, or import a bank statement to add its transactions.</p>
-    <div class="toolbar" style="margin:0"><button class="btn pri" data-act="xlsxout">Export to Excel</button><button class="btn" data-act="xlsxin">Import from Excel</button></div>
-    ${bkHtml()}
-    <h3 style="margin:6px 0 0;font-size:15px;font-family:var(--f-display)">Backup file</h3>
+  <h2 class="sec">Backup</h2><div class="card" style="display:grid;gap:10px">
     <p class="small muted">Export everything as JSON. Import replaces the current budget.</p>
     <div class="toolbar" style="margin:0"><button class="btn" data-act="export">Export</button><button class="btn" data-act="import">Import</button></div>
     <div id="eraseBox"><button class="btn danger small" data-act="erase">Erase all data</button></div>
@@ -1125,7 +1062,6 @@ function vMore() {
     <p><b>Work time.</b> Turns spending into hours or days of work, from your hourly or daily income or last month's salary.</p>
     <p><b>Lent &amp; Owed.</b> Under Accounts, track money you lent or borrowed, due dates and repayments. Link an account to move the money for real.</p>
     <p><b>Reconcile.</b> Mark transactions cleared, then match your account to the bank's balance.</p>
-    <p><b>Excel &amp; backups.</b> Export to Excel any time, or import a bank statement. Signed in, your budget is backed up to your account every day.</p>
   </div>`;
 }
 
@@ -1134,10 +1070,10 @@ let sheetRefresh = null;
 function openSheet(html, mount) {
   const r = $("#sheetRoot");
   r.innerHTML = `<div class="scrim" data-scrim><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div></div>`;
-  r.hidden = false; document.documentElement.classList.add("locked"); if (mount) mount(r.querySelector(".sheet"));
+  r.hidden = false; if (mount) mount(r.querySelector(".sheet"));
   const f = r.querySelector("[autofocus]"); if (f) setTimeout(() => f.focus(), 60);
 }
-function closeSheet() { const r = $("#sheetRoot"); r.hidden = true; r.innerHTML = ""; sheetRefresh = null; document.documentElement.classList.remove("locked"); }
+function closeSheet() { const r = $("#sheetRoot"); r.hidden = true; r.innerHTML = ""; sheetRefresh = null; }
 const shead = t => `<div class="shead"><h2>${t}</h2><button class="x" data-close aria-label="Close">✕</button></div>`;
 const acctOpts = (sel, filt = () => true) => S.meta.accounts.filter(a => !a.closed || a.id === sel).filter(filt).map(a => `<option value="${a.id}" ${a.id === sel ? "selected" : ""}>${esc(a.name)}</option>`).join("");
 function catOpts(sel, withIncome) {
@@ -1150,6 +1086,7 @@ function catOpts(sel, withIncome) {
 function txSheet(id, preset = {}) {
   const ex = id ? findTx(id)?.t : null;
   let kind = ex ? (ex.xfer ? "xfer" : ex.amount > 0 ? "in" : "out") : (preset.kind || "out");
+  let ik = preset.ik || "lent";   /* lend/borrow sub-type: lent | borrowed | repay */
   let from = ex?.acct, to = ex?.xfer;
   if (ex?.xfer && ex.amount > 0) { from = ex.xfer; to = ex.acct; }
   const firstAcct = (S.meta.accounts.find(a => a.onBudget && !a.closed) || S.meta.accounts[0])?.id;
@@ -1157,27 +1094,56 @@ function txSheet(id, preset = {}) {
   const payees = [...new Set(allTx().filter(t => !t.xfer && t.payee).map(t => t.payee))].slice(0, 200);
   const pair = ex?.xid ? allTx().find(t => t.xid === ex.xid && t.id !== ex.id) : null;
   const xcat = ex?.xfer ? (ex.cat || pair?.cat || "") : "";
+  const iouFields = () => {
+    const ious = S.meta.ious ||= [];
+    const open = ious.filter(iouOpen).sort((a, b) => a.person.localeCompare(b.person));
+    const names = [...new Set(ious.map(x => x.person.trim()))];
+    const acctSel = (label, sel) => `<label class="field">${label}<select id="t-acct"><option value="">Don't record in an account</option>${acctOpts(sel || null, a => !a.helper)}</select></label>`;
+    const sub = `<div class="seg">${[["lent", "I lent"], ["borrowed", "I borrowed"], ["repay", "Repayment"]].map(([k, l]) => `<button data-ik="${k}" class="${ik === k ? "on" : ""}">${l}</button>`).join("")}</div>`;
+    if (ik === "repay") {
+      if (!open.length) return sub + `<p class="small muted">Nothing outstanding. Record money you lend or borrow first.</p>`;
+      const first = open.find(x => x.id === preset.iou) || open[0];
+      return sub + `<label class="field">Who is the repayment with?<select id="t-iou">${open.map(e => `<option value="${e.id}" ${e === first ? "selected" : ""}>${esc(e.person)} · ${e.kind === "lent" ? "owes you" : "you owe"} ${fmt(iouLeft(e))}${e.note ? " · " + esc(e.note) : ""}</option>`).join("")}</select></label>
+        <div class="quick" id="t-iouq"></div>
+        ${acctSel("Received into / paid from", first.acct)}
+        <label class="field">Date<input id="t-date" type="date" value="${TODAY}"></label>`;
+    }
+    return sub + `<label class="field">${ik === "lent" ? "Lent to" : "Borrowed from"}<input id="t-person" list="iou-people2" placeholder="Name" autocomplete="off" value="${esc(preset.person || "")}"></label>
+      <datalist id="iou-people2">${names.map(n => `<option value="${esc(n)}"></option>`).join("")}</datalist>
+      <label class="field">What for<input id="t-note" placeholder="Optional, e.g. rent share"></label>
+      ${acctSel(ik === "lent" ? "Paid from" : "Received into", preset.acct)}
+      <div class="grid2"><label class="field">Date<input id="t-date" type="date" value="${TODAY}"></label><label class="field">Due by<input id="t-due" type="date"></label></div>
+      <p class="small muted">Picking an account moves the money there too, so its balance stays right. See and change these under Accounts → Lent &amp; Owed.</p>`;
+  };
   const draw = () => {
     const isX = kind === "xfer";
     return `${shead(ex ? "Edit transaction" : "New transaction")}
-    <div class="seg">${[["out", "Expense"], ["in", "Income"], ["xfer", "Transfer"]].map(([k, l]) => `<button data-kind="${k}" class="${kind === k ? "on" : ""}">${l}</button>`).join("")}</div>
+    <div class="seg">${[["out", "Expense"], ["in", "Income"], ["xfer", "Transfer"], ...(ex ? [] : [["iou", "Lend / Borrow"]])].map(([k, l]) => `<button data-kind="${k}" class="${kind === k ? "on" : ""}">${l}</button>`).join("")}</div>
     <label class="field">Amount<input id="t-amt" class="amount-in num" inputmode="decimal" placeholder="0" value="${ex ? plain(Math.abs(ex.amount)) : ""}" autofocus aria-label="Amount"></label>
-    ${isX ? `<div class="grid2"><label class="field">From<select id="t-from">${acctOpts(from || firstAcct)}</select></label><label class="field">To<select id="t-to">${acctOpts(to || S.meta.accounts.find(a => a.id !== (from || firstAcct))?.id)}</select></label></div>
+    ${kind === "iou" ? iouFields() : isX ? `<div class="grid2"><label class="field">From<select id="t-from">${acctOpts(from || firstAcct)}</select></label><label class="field">To<select id="t-to">${acctOpts(to || S.meta.accounts.find(a => a.id !== (from || firstAcct))?.id)}</select></label></div>
       <label class="field" id="t-xcatwrap">Category (only when money leaves or joins the budget)<select id="t-cat">${catOpts(xcat, false)}</select></label>`
     : `<label class="field">Payee<input id="t-payee" list="payees" value="${esc(ex?.payee || "")}" placeholder="${kind === "in" ? "Employer, client…" : "Shop, person, company"}" autocomplete="off"></label>
       <datalist id="payees">${payees.map(p => `<option value="${esc(p)}"></option>`).join("")}</datalist>
       <label class="field">Category<select id="t-cat">${catOpts(ex ? ex.cat : (kind === "in" ? (S.meta.incomeCats?.[0]?.id || "income") : ""), true)}</select></label>
       <label class="field">Account<select id="t-acct">${acctOpts(ex?.acct || preset.acct || firstAcct)}</select></label>`}
-    <div class="grid2"><label class="field">Date<input id="t-date" type="date" value="${ex?.date || TODAY}"></label><label class="field">Memo<input id="t-memo" value="${esc(ex?.memo || "")}" placeholder="Optional"></label></div>
-    <label class="toggle">Cleared with bank<input id="t-clr" type="checkbox" ${(ex ? ex.cleared : true) ? "checked" : ""}></label>
+    ${kind === "iou" ? "" : `<div class="grid2"><label class="field">Date<input id="t-date" type="date" value="${ex?.date || TODAY}"></label><label class="field">Memo<input id="t-memo" value="${esc(ex?.memo || "")}" placeholder="Optional"></label></div>`}
+    <label class="toggle" ${kind === "iou" ? "hidden" : ""}>Cleared with bank<input id="t-clr" type="checkbox" ${(ex ? ex.cleared : true) ? "checked" : ""}></label>
     ${ex?.rec ? `<p class="small muted">🔒 Reconciled. Editing it will change your reconciled balance.</p>` : ""}
     <p class="small muted">Tip: type sums like 1200+350.</p>
-    <button class="btn pri block" data-save>${ex ? "Save changes" : "Add transaction"}</button>
+    <button class="btn pri block" data-save>${ex ? "Save changes" : kind === "iou" ? (ik === "repay" ? "Record repayment" : ik === "lent" ? "Save money lent" : "Save money borrowed") : "Add transaction"}</button>
     ${ex ? `<div id="delbox"><button class="btn danger block" data-del>Delete transaction</button></div>` : ""}`;
   };
   const mount = el => {
     el.addEventListener("click", e => {
-      const k = e.target.closest("[data-kind]");
+      const k = e.target.closest("[data-kind]"), ib = e.target.closest("[data-ik]");
+      if (k || ib) {
+        const keep = { amt: el.querySelector("#t-amt").value, date: el.querySelector("#t-date")?.value, memo: el.querySelector("#t-memo")?.value, person: el.querySelector("#t-person")?.value, note: el.querySelector("#t-note")?.value };
+        if (k) kind = k.dataset.kind; else ik = ib.dataset.ik;
+        el.innerHTML = '<div class="grab"></div>' + draw();
+        const setv = (sel, v) => { const x = el.querySelector(sel); if (x && v != null) x.value = v; };
+        setv("#t-amt", keep.amt); setv("#t-date", keep.date); setv("#t-memo", keep.memo); setv("#t-person", keep.person); setv("#t-note", keep.note);
+        wire(el); return;
+      }
       if (k) { const keep = { amt: el.querySelector("#t-amt").value, date: el.querySelector("#t-date").value, memo: el.querySelector("#t-memo").value }; kind = k.dataset.kind; el.innerHTML = '<div class="grab"></div>' + draw(); el.querySelector("#t-amt").value = keep.amt; el.querySelector("#t-date").value = keep.date; el.querySelector("#t-memo").value = keep.memo; wire(el); return; }
       if (e.target.closest("[data-del]")) { el.querySelector("#delbox").innerHTML = `<div class="confirm">Delete for good?<button class="btn danger small" data-delyes>Delete</button><button class="btn small" data-delno>Keep</button></div>`; return; }
       if (e.target.closest("[data-delno]")) { el.querySelector("#delbox").innerHTML = `<button class="btn danger block" data-del>Delete transaction</button>`; return; }
@@ -1195,10 +1161,35 @@ function txSheet(id, preset = {}) {
     const f = el.querySelector("#t-from"), t = el.querySelector("#t-to"), w = el.querySelector("#t-xcatwrap");
     const upd = () => { if (!f) return; const a = acctById(f.value), b = acctById(t.value); w.hidden = !(a && b && a.onBudget !== b.onBudget); };
     if (f) { f.addEventListener("change", upd); t.addEventListener("change", upd); upd(); }
+    const io = el.querySelector("#t-iou");
+    if (io) {
+      const sync = () => { const r = S.meta.ious.find(x => x.id === io.value); if (!r) return; const left = iouLeft(r);
+        el.querySelector("#t-iouq").innerHTML = `<button data-pq="${left}">Full ${fmt(left)}</button>${left >= 200 ? `<button data-pq="${Math.round(left / 200) * 100}">Half ${fmt(Math.round(left / 200) * 100)}</button>` : ""}`;
+        if (r.acct && acctById(r.acct)) el.querySelector("#t-acct").value = r.acct; };
+      io.addEventListener("change", sync); sync();
+      el.querySelector("#t-iouq").addEventListener("click", ev => { const q = ev.target.closest("[data-pq]"); if (q) el.querySelector("#t-amt").value = plain(+q.dataset.pq); });
+    }
   };
   const save = el => {
     const amt = parseAmt(el.querySelector("#t-amt").value);
     if (!amt || amt <= 0) { toast("Enter an amount above zero."); el.querySelector("#t-amt").focus(); return; }
+    if (kind === "iou") {
+      const date = el.querySelector("#t-date")?.value || TODAY, acct = el.querySelector("#t-acct")?.value || null;
+      let keys, msg;
+      if (ik === "repay") {
+        const r = (S.meta.ious || []).find(x => x.id === el.querySelector("#t-iou")?.value);
+        if (!r) { toast("Nothing outstanding to repay."); return; }
+        const left = iouLeft(r); if (amt > left) { toast(`That's more than the ${fmt(left)} remaining.`); return; }
+        keys = iouRepay(r, amt, date, acct);
+        msg = iouLeft(r) <= 0 ? `${r.person} is fully settled` : `Recorded ${fmt(amt)} ${r.kind === "lent" ? "from" : "to"} ${r.person}`;
+      } else {
+        const person = el.querySelector("#t-person").value.trim();
+        if (!person) { toast("Add the person's name."); el.querySelector("#t-person").focus(); return; }
+        keys = iouCreate(ik, person, amt, date, el.querySelector("#t-due").value || null, el.querySelector("#t-note").value.trim(), acct);
+        msg = ik === "lent" ? `Lent ${fmt(amt)} to ${person}` : `Borrowed ${fmt(amt)} from ${person}`;
+      }
+      markDirty(...new Set(keys)); closeSheet(); render(); toast(msg); return;
+    }
     const date = el.querySelector("#t-date").value || TODAY, memo = el.querySelector("#t-memo").value.trim(), cleared = el.querySelector("#t-clr").checked;
     if (kind === "xfer" && el.querySelector("#t-from").value === el.querySelector("#t-to").value) { toast("Pick two different accounts."); return; }
     const keys = [];
@@ -1310,12 +1301,7 @@ function accountSheet(tab) {
       <button class="btn block" data-reset>Email me a password reset link</button>
       <button class="btn danger block" data-signout>Sign out</button>`, el => {
       el.addEventListener("click", async ev => {
-        if (ev.target.closest("[data-signout]")) {
-          try { await AUTH.signOut(); closeSheet(); toast("Signed out"); } catch (e) { toast(authMsg(e)); return; }
-          /* don't leave the account's offline copy on this device */
-          try { await FS.terminate(); await FS.clearPersistence(); } catch (e) {}
-          setTimeout(() => location.reload(), 600);
-        }
+        if (ev.target.closest("[data-signout]")) { try { await AUTH.signOut(); closeSheet(); toast("Signed out"); } catch (e) { toast(authMsg(e)); } }
         if (ev.target.closest("[data-reset]")) { try { await AUTH.sendPasswordResetEmail(USER.email); toast("Reset link sent to " + USER.email); } catch (e) { toast(authMsg(e)); } }
         if (ev.target.closest("[data-verify]")) { try { await USER.sendEmailVerification(); toast("Verification email sent"); } catch (e) { toast(authMsg(e)); } }
       });
@@ -1430,10 +1416,8 @@ function exportSheet() {
     <p class="small muted">Keep this somewhere safe. Import it here to restore.</p>`, async el => {
     el.addEventListener("click", async e => {
       if (e.target.closest("[data-copy]")) { try { await navigator.clipboard.writeText(json); toast("Copied"); } catch (err) { const t = el.querySelector("#x-json"); t.focus(); t.select(); toast("Selected. Copy it manually."); } }
-      if (e.target.closest("[data-file]") && !window.claude) { saveFile("taka-koi-" + TODAY + ".json", new Blob([json], { type: "application/json" })); return; }
       if (e.target.closest("[data-file]")) { try { const d = await window.claude.use("downloads"); await d.save({ filename: "taka-koi-" + TODAY + ".json", data: json }); toast("Saved"); } catch (err) { if (err?.code !== "declined") toast("Couldn't save the file. Use Copy instead."); } }
     });
-    if (!window.claude) el.querySelector("[data-file]").hidden = false;
     try { const d = window.claude && await window.claude.use("downloads"); if (d) el.querySelector("[data-file]").hidden = false; } catch (e) {}
   });
 }
@@ -1450,295 +1434,10 @@ function importSheet() {
         const d = JSON.parse(el.querySelector("#i-json").value);
         if (!d.meta || !Array.isArray(d.meta.groups) || !Array.isArray(d.meta.accounts) || typeof d.tx !== "object") throw 0;
         d.meta.assigned ||= {}; d.meta.payees ||= {}; d.meta.ious ||= [];
-        backupBeforeReplace().then(() => { replaceAll({ meta: d.meta, tx: d.tx }); closeSheet(); toast("Backup restored"); });
+        replaceAll({ meta: d.meta, tx: d.tx }); closeSheet(); toast("Backup restored");
       } catch (err) { toast("That doesn't look like a Taka Koi? backup."); }
     });
   });
-}
-
-/* ---------- Excel export / import ---------- */
-let xlsxP = null;
-function loadXLSX() {
-  if (window.XLSX) return Promise.resolve(window.XLSX);
-  return xlsxP ||= new Promise((res, rej) => {
-    const s = document.createElement("script");
-    s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
-    s.onload = () => window.XLSX ? res(window.XLSX) : rej(new Error("xlsx"));
-    s.onerror = () => { xlsxP = null; s.remove(); rej(new Error("xlsx")); };
-    document.head.appendChild(s);
-  });
-}
-/* hands a file to the user: share sheet on phones (Save to Files / Drive / email), plain download elsewhere */
-async function saveFile(name, blob) {
-  const f = typeof File === "function" ? new File([blob], name, { type: blob.type }) : null;
-  if (f && matchMedia("(pointer:coarse)").matches && navigator.canShare && navigator.canShare({ files: [f] })) {
-    try { await navigator.share({ files: [f], title: name }); return true; } catch (e) { if (e && e.name === "AbortError") return false; }
-  }
-  const u = URL.createObjectURL(blob), a = document.createElement("a");
-  a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(u), 5000);
-  return true;
-}
-const XL_MONEY = '#,##0.00;[Red]-#,##0.00';
-const isoToSerial = d => { const [y, m, dd] = d.split("-").map(Number); return (Date.UTC(y, m - 1, dd) - Date.UTC(1899, 11, 30)) / 864e5; };
-const bare = s => String(s ?? "").replace(/^[^\p{L}\p{N}]+/u, "").trim().toLowerCase();   /* name without a leading emoji */
-
-function sheetOf(X, head, rows, fmt = {}) {
-  const ws = X.utils.aoa_to_sheet([head, ...rows]);
-  head.forEach((h, c) => {
-    const z = fmt[h]; if (!z) return;
-    for (let r = 1; r <= rows.length; r++) { const cell = ws[X.utils.encode_cell({ r, c })]; if (cell && cell.t === "n") cell.z = z; }
-  });
-  ws["!cols"] = head.map((h, c) => ({ wch: Math.min(40, Math.max(h.length + 2, ...rows.slice(0, 300).map(r => String(r[c] ?? "").length + 2))) }));
-  return ws;
-}
-async function exportXLSX() {
-  let X; try { X = await loadXLSX(); } catch (e) { toast("Couldn't load the Excel tools. Check your connection."); return; }
-  const money = c => Math.round(c || 0) / 100;
-  const groupOf = {}; S.meta.groups.forEach(g => g.cats.forEach(c => groupOf[c.id] = g));
-  const txs = allTx().slice().sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
-  const txRows = txs.map(t => {
-    const c = catById(t.cat), ic = incById(t.cat), x = t.xfer ? acctById(t.xfer) : null;
-    return [isoToSerial(t.date), acctById(t.acct)?.name || "", t.payee || "", c ? groupOf[c.id]?.name || "" : (ic || t.cat === "income") ? "Income" : "",
-      c ? c.name : ic ? ic.name : t.cat === "income" ? "Ready to Assign" : "", t.memo || "", money(t.amount), t.cleared ? "Yes" : "No", x ? x.name : ""];
-  });
-  const { b, cl } = balances();
-  const acRows = S.meta.accounts.map(a => [a.name, a.type, a.onBudget ? "Budget" : "Tracking", a.closed ? "Closed" : "Open", money(b[a.id]), money(cl[a.id])]);
-  const months = [...new Set([...Object.keys(S.tx), ...Object.keys(S.meta.assigned)])].sort();
-  const bRows = [];
-  if (months.length) for (let m = months[0], end = months[months.length - 1] > CUR ? months[months.length - 1] : CUR; m <= end; m = addM(m, 1)) {
-    const B = budget(m);
-    for (const g of S.meta.groups) for (const c of g.cats) { const r = B.rows[c.id]; if (r && (r.assigned || r.activity || r.available)) bRows.push([m, g.name, c.name, money(r.assigned), money(r.activity), money(r.available)]); }
-  }
-  const iRows = (S.meta.ious || []).map(e => [e.kind === "lent" ? "Lent" : "Borrowed", e.person, e.note || "", isoToSerial(e.date), e.due ? isoToSerial(e.due) : "", money(e.amount), money(iouPaid(e)), money(Math.max(0, iouLeft(e))), iouOpen(e) ? "Open" : "Settled"]);
-  const wb = X.utils.book_new();
-  X.utils.book_append_sheet(wb, sheetOf(X, ["Date", "Account", "Payee", "Category group", "Category", "Memo", "Amount", "Cleared", "Transfer account"], txRows, { Date: "yyyy-mm-dd", Amount: XL_MONEY }), "Transactions");
-  X.utils.book_append_sheet(wb, sheetOf(X, ["Account", "Type", "Used for", "Status", "Balance", "Cleared balance"], acRows, { Balance: XL_MONEY, "Cleared balance": XL_MONEY }), "Accounts");
-  X.utils.book_append_sheet(wb, sheetOf(X, ["Month", "Group", "Category", "Assigned", "Activity", "Available"], bRows, { Assigned: XL_MONEY, Activity: XL_MONEY, Available: XL_MONEY }), "Budget");
-  X.utils.book_append_sheet(wb, sheetOf(X, ["Type", "Person", "What for", "Date", "Due", "Amount", "Repaid", "Remaining", "Status"], iRows, { Date: "yyyy-mm-dd", Due: "yyyy-mm-dd", Amount: XL_MONEY, Repaid: XL_MONEY, Remaining: XL_MONEY }), "Lent & Owed");
-  /* exact copy of everything, so importing this workbook restores the budget as it was */
-  const json = JSON.stringify({ app: "taka-koi", exported: new Date().toISOString(), ...S }), chunks = [["Taka Koi? backup data. Don't edit this sheet; it's used to restore the budget."]];
-  for (let i = 0; i < json.length; i += 30000) chunks.push([json.slice(i, i + 30000)]);
-  X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(chunks), "Backup");
-  wb.Workbook = { Sheets: wb.SheetNames.map(n => ({ name: n, Hidden: n === "Backup" ? 1 : 0 })) };
-  const out = X.write(wb, { bookType: "xlsx", type: "array", compression: true });
-  const ok = await saveFile("taka-koi-" + TODAY + ".xlsx", new Blob([out], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
-  if (ok) toast("Excel file ready");
-}
-
-function xlDate(v) {
-  if (v instanceof Date && !isNaN(v)) return localISO(v);
-  if (typeof v === "number" && v > 20000 && v < 80000) return new Date(Math.round((v - 25569) * 864e5)).toISOString().slice(0, 10);
-  const s = String(v ?? "").trim(); if (!s) return null;
-  let m = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
-  if (m) return m[1] + "-" + z2(m[2]) + "-" + z2(m[3]);
-  m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2}|\d{4})$/);
-  if (m) {   /* day first (dd/mm/yyyy), unless that can't be right */
-    let d = +m[1], mo = +m[2]; const y = m[3].length === 2 ? 2000 + +m[3] : +m[3];
-    if (mo > 12 && d <= 12) [d, mo] = [mo, d];
-    if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
-    return y + "-" + z2(mo) + "-" + z2(d);
-  }
-  const t = Date.parse(s); return isNaN(t) ? null : localISO(new Date(t));
-}
-function xlAmt(v) { if (v === "" || v == null) return null; if (typeof v === "number") return Math.round(v * 100); return parseAmt(String(v).replace(/^\((.*)\)$/, "-$1").replace(/[A-Za-z]/g, "")); }
-
-/* reads a sheet of transactions (ours, or a bank statement with similar columns) into a plan; nothing changes until it's applied */
-function planImport(X, ws, fallbackAcct) {
-  const rows = X.utils.sheet_to_json(ws, { raw: true, defval: "" });
-  if (!rows.length) return { error: "That sheet has no rows." };
-  const keys = Object.keys(rows[0]);
-  const col = (...names) => keys.find(k => names.includes(k.trim().toLowerCase()));
-  const C = {
-    date: col("date", "transaction date", "txn date", "value date", "posting date"),
-    acct: col("account", "account name"),
-    payee: col("payee", "description", "details", "narration", "particulars", "merchant"),
-    group: col("category group", "group"),
-    cat: col("category"),
-    memo: col("memo", "note", "notes", "remarks", "reference"),
-    amt: col("amount", "amount (৳)", "amount (bdt)"),
-    out: col("outflow", "debit", "withdrawal", "withdrawals", "money out", "paid out", "expense"),
-    inn: col("inflow", "credit", "deposit", "deposits", "money in", "paid in", "income"),
-    clr: col("cleared"),
-    xfer: col("transfer account", "transfer"),
-  };
-  if (!C.date) return { error: "Couldn't find a Date column." };
-  if (!C.amt && !C.out && !C.inn) return { error: "Couldn't find an Amount column (or Inflow / Outflow)." };
-  const out = [], bad = [];
-  rows.forEach((r, i) => {
-    const date = xlDate(r[C.date]);
-    let amount = C.amt ? xlAmt(r[C.amt]) : null;
-    if (amount == null && (C.out || C.inn)) { const o = C.out ? xlAmt(r[C.out]) : null, n = C.inn ? xlAmt(r[C.inn]) : null; if (o != null || n != null) amount = (n || 0) - Math.abs(o || 0); }
-    if (!date || amount == null || !amount) { if (Object.values(r).some(v => String(v).trim())) bad.push(i + 2); return; }
-    out.push({ date, amount, acct: String(C.acct ? r[C.acct] : "").trim() || fallbackAcct, payee: String(C.payee ? r[C.payee] : "").trim(), group: String(C.group ? r[C.group] : "").trim(), cat: String(C.cat ? r[C.cat] : "").trim(), memo: String(C.memo ? r[C.memo] : "").trim(), cleared: C.clr ? !/^(no|n|false|0)$/i.test(String(r[C.clr]).trim()) : true, xfer: String(C.xfer ? r[C.xfer] : "").trim() });
-  });
-  /* a transfer appears twice (once per account); keep the outgoing side, or the incoming one when it's alone */
-  const outKeys = new Set(out.filter(r => r.xfer && r.amount < 0).map(r => [r.date, -r.amount, bare(r.acct), bare(r.xfer)].join("|")));
-  const list = out.filter(r => !(r.xfer && r.amount > 0 && outKeys.has([r.date, r.amount, bare(r.xfer), bare(r.acct)].join("|"))));
-  return { list, bad, mirrors: out.length - list.length };
-}
-function applyImport(plan) {
-  const keys = new Set(["meta"]), made = { accts: 0, cats: 0 };
-  const acctFor = name => {
-    let a = S.meta.accounts.find(x => bare(x.name) === bare(name));
-    if (!a) { a = { id: rid(), name, type: "checking", onBudget: true, closed: false }; S.meta.accounts.push(a); made.accts++; }
-    return a;
-  };
-  const catFor = (name, group, amount) => {
-    const n = bare(name);
-    if (!n || /^uncategori[sz]ed$/.test(n)) return null;
-    if (n === "ready to assign" || n === "income") return "income";
-    const inc = (S.meta.incomeCats ||= []).find(c => bare(c.name) === n); if (inc) return inc.id;
-    const gs = S.meta.groups, inGroup = group && gs.find(g => bare(g.name) === bare(group));
-    const c = (inGroup && inGroup.cats.find(x => bare(x.name) === n)) || allCats().find(x => bare(x.name) === n); if (c) return c.id;
-    if (bare(group) === "income" || (!group && amount > 0 && /income|salary|bonus|refund/.test(n))) { const ic = { id: "inc-" + rid(), name: name.trim(), emoji: "" }; S.meta.incomeCats.push(ic); made.cats++; return ic.id; }
-    let g = inGroup || gs.find(x => bare(x.name) === bare(group || "Imported"));
-    if (!g) { g = { id: rid(), name: (group || "Imported").trim(), emoji: "", cats: [] }; gs.push(g); }
-    const nc = { id: rid(), name: name.trim(), emoji: "", target: null, hidden: false }; g.cats.push(nc); made.cats++; return nc.id;
-  };
-  /* skip rows already in the budget, so importing the same statement twice doesn't double it */
-  const seen = {}; for (const t of allTx()) { const k = [t.date, t.acct, t.amount, (t.payee || "").toLowerCase()].join("|"); seen[k] = (seen[k] || 0) + 1; }
-  let added = 0, dupes = 0;
-  for (const r of plan.list) {
-    const A = acctFor(r.acct);
-    if (r.xfer) {
-      const B = acctFor(r.xfer), from = r.amount < 0 ? A : B, to = r.amount < 0 ? B : A, amt = Math.abs(r.amount);
-      if (from.id === to.id) continue;
-      const k = [r.date, from.id, -amt, ("Transfer: " + to.name).toLowerCase()].join("|");
-      if (seen[k]) { seen[k]--; dupes++; continue; }
-      const mixed = from.onBudget !== to.onBudget, cat = mixed ? catFor(r.cat, r.group, r.amount) : null, xid = rid();
-      keys.add(putTx({ id: rid(), date: r.date, acct: from.id, payee: "Transfer: " + to.name, cat: from.onBudget && mixed ? cat : null, amount: -amt, memo: r.memo, cleared: r.cleared, xfer: to.id, xid }));
-      keys.add(putTx({ id: rid(), date: r.date, acct: to.id, payee: "Transfer: " + from.name, cat: to.onBudget && mixed ? cat : null, amount: amt, memo: r.memo, cleared: r.cleared, xfer: from.id, xid }));
-    } else {
-      const k = [r.date, A.id, r.amount, r.payee.toLowerCase()].join("|");
-      if (seen[k]) { seen[k]--; dupes++; continue; }
-      keys.add(putTx({ id: rid(), date: r.date, acct: A.id, payee: r.payee, cat: catFor(r.cat, r.group, r.amount), amount: r.amount, memo: r.memo, cleared: r.cleared }));
-    }
-    added++;
-  }
-  return { keys: [...keys], added, dupes, ...made };
-}
-function xlsxImportSheet() {
-  openSheet(`${shead("Import from Excel")}
-    <label class="field">Choose an Excel or CSV file<input id="xl-file" type="file" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"></label>
-    <p class="small muted">Use a file exported from Taka Koi?, or a bank statement with <b>Date</b> and <b>Amount</b> columns (or <b>Inflow</b> / <b>Outflow</b>). Account, Payee, Category, Category group and Memo columns are used when present.</p>
-    <div id="xl-out"></div>`, el => {
-    el.querySelector("#xl-file").addEventListener("change", async ev => {
-      const f = ev.target.files[0], box = el.querySelector("#xl-out"); if (!f) return;
-      box.innerHTML = `<p class="small muted">Reading ${esc(f.name)}…</p>`;
-      let X, wb; try { X = await loadXLSX(); } catch (e) { box.innerHTML = `<p class="notice">Couldn't load the Excel tools. Check your connection.</p>`; return; }
-      try { wb = X.read(await f.arrayBuffer(), { type: "array", raw: true }); } catch (e) { box.innerHTML = `<p class="notice">That file couldn't be opened as a spreadsheet.</p>`; return; }
-      let full = null;
-      const bws = wb.Sheets["Backup"];
-      if (bws) { try { const cells = X.utils.sheet_to_json(bws, { header: 1, raw: true }).slice(1).map(r => r[0] || "").join(""); const d = JSON.parse(cells); if (d.meta && Array.isArray(d.meta.groups) && typeof d.tx === "object") full = d; } catch (e) {} }
-      const txName = wb.SheetNames.find(n => n.trim().toLowerCase() === "transactions") || wb.SheetNames.find(n => n !== "Backup");
-      const accts = S.meta.accounts.filter(a => !a.closed && !a.helper);
-      const draw = (fallback) => {
-        const plan = txName ? planImport(X, wb.Sheets[txName], fallback) : { error: "No sheets found." };
-        const n = plan.list ? plan.list.length : 0;
-        return { plan, html: `${full ? `<div class="card" style="display:grid;gap:8px;padding:14px"><h3 style="font-size:15px">Full Taka Koi? backup</h3><p class="small muted">Exported ${esc((full.exported || "").slice(0, 10) || "earlier")} with ${Object.values(full.tx).flat().length} transactions and ${full.meta.accounts.length} accounts. Restoring replaces your current budget.</p><button class="btn pri block" data-xlfull>Replace my budget with this backup</button></div>` : ""}
-          ${plan.error ? `<p class="notice">${esc(plan.error)}</p>` : `<div class="card" style="display:grid;gap:8px;padding:14px"><h3 style="font-size:15px">${full ? "Or add its transactions" : "Add transactions"}</h3>
-            <p class="small">Found <b>${n}</b> transaction${n === 1 ? "" : "s"} in “${esc(txName)}”.${plan.mirrors ? ` ${plan.mirrors} matching transfer row${plan.mirrors === 1 ? "" : "s"} merged.` : ""}${plan.bad.length ? ` <span style="color:var(--warn)">${plan.bad.length} row${plan.bad.length === 1 ? "" : "s"} skipped (no date or amount): ${plan.bad.slice(0, 8).join(", ")}${plan.bad.length > 8 ? "…" : ""}.</span>` : ""}</p>
-            <label class="field">Account for rows without one<select id="xl-acct">${accts.map(a => `<option ${a.name === fallback ? "selected" : ""}>${esc(a.name)}</option>`).join("")}<option value="Imported account" ${fallback === "Imported account" ? "selected" : ""}>New account: Imported account</option></select></label>
-            <p class="small muted">Rows already in your budget (same date, account, amount and payee) are skipped. Missing accounts and categories are created.${mode === "example" ? " You're viewing the example, so this starts a fresh budget." : ""}</p>
-            <button class="btn ${full ? "" : "pri"} block" data-xladd ${n ? "" : "disabled"}>Add ${n} transaction${n === 1 ? "" : "s"}</button></div>`}` };
-      };
-      let fb = accts[0]?.name || "Imported account", cur = draw(fb);
-      box.innerHTML = cur.html;
-      box.onchange = e => { if (e.target.id === "xl-acct") { fb = e.target.value; cur = draw(fb); box.innerHTML = cur.html; } };
-      box.onclick = async e => {
-        if (e.target.closest("[data-xlfull]")) {
-          full.meta.assigned ||= {}; full.meta.payees ||= {}; full.meta.ious ||= [];
-          await backupBeforeReplace();
-          replaceAll({ meta: full.meta, tx: full.tx }); closeSheet(); toast("Backup restored from Excel"); return;
-        }
-        if (e.target.closest("[data-xladd]")) {
-          if (mode === "example") { replaceAll(blank()); ui.month = CUR; }
-          const r = applyImport(cur.plan);
-          markDirty(...r.keys); closeSheet(); ui.tab = "transactions"; ui.acct = null; ui.tf = { acct: "", month: "", type: "" }; render(); scrollTo(0, 0);
-          toast(`Added ${r.added} transaction${r.added === 1 ? "" : "s"}${r.dupes ? `, skipped ${r.dupes} already here` : ""}${r.accts ? `, ${r.accts} new account${r.accts === 1 ? "" : "s"}` : ""}${r.cats ? `, ${r.cats} new categor${r.cats === 1 ? "y" : "ies"}` : ""}`);
-        }
-      };
-    });
-  });
-}
-
-/* ---------- backups kept in the signed-in account ---------- */
-/* takakoi/{uid}/backups/{id} holds the summary; the data (gzipped when the browser can) sits in ./parts/{n}, each under Firestore's 1 MB document limit */
-const bk = { list: null, busy: false, err: "", checked: 0 };
-const bkCol = () => FS.collection("takakoi/" + UID + "/backups");
-const bkReady = () => store === "cloud" && USER && FS;
-const b64 = u8 => { let s = ""; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
-async function packData() {
-  const json = JSON.stringify({ app: "taka-koi", exported: new Date().toISOString(), ...S });
-  if (window.CompressionStream) { try { const buf = await new Response(new Blob([json]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer(); return { gz: true, s: b64(new Uint8Array(buf)), size: json.length }; } catch (e) {} }
-  return { gz: false, s: json, size: json.length };
-}
-async function unpack(gz, s) {
-  if (!gz) return s;
-  const bin = atob(s), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-  return new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
-}
-const bkErr = e => e && e.code === "permission-denied" ? "rules" : "net";
-async function cloudBackup(kind, label) {
-  const p = await packData(), ref = bkCol().doc(), CH = 700000, parts = [];
-  for (let i = 0; i < p.s.length; i += CH) parts.push(p.s.slice(i, i + CH));
-  for (let i = 0; i < parts.length; i++) await ref.collection("parts").doc(String(i)).set({ s: parts[i] });
-  await ref.set({ created: Date.now(), kind, label: label || "", parts: parts.length, gz: p.gz, size: p.size, txCount: allTx().length, accounts: S.meta.accounts.length });   /* written last, so a listed backup is always complete */
-  bk.list = null; bk.err = "";
-  return ref.id;
-}
-async function loadBackups() {
-  if (!bkReady() || bk.busy) return;
-  bk.busy = true;
-  try { const q = await bkCol().orderBy("created", "desc").limit(40).get(); bk.list = q.docs.map(d => ({ id: d.id, ...d.data() })); bk.err = ""; }
-  catch (e) { bk.list = []; bk.err = bkErr(e); }
-  bk.busy = false;
-  if (ui.tab === "more") render();
-}
-async function readBackup(id) {
-  const ref = bkCol().doc(id), d = (await ref.get()).data(); if (!d) throw new Error("missing");
-  const parts = await Promise.all(Array.from({ length: d.parts }, (_, i) => ref.collection("parts").doc(String(i)).get()));
-  const data = JSON.parse(await unpack(d.gz, parts.map(p => p.data()?.s || "").join("")));
-  if (!data.meta || !Array.isArray(data.meta.groups) || typeof data.tx !== "object") throw new Error("bad");
-  data.meta.assigned ||= {}; data.meta.payees ||= {}; data.meta.ious ||= [];
-  return data;
-}
-async function deleteBackup(id) {
-  const ref = bkCol().doc(id), d = (await ref.get()).data();
-  await ref.delete();
-  for (let i = 0; i < (d?.parts || 0); i++) await ref.collection("parts").doc(String(i)).delete();
-}
-/* before anything replaces the whole budget, keep the current one in the account */
-async function backupBeforeReplace(label) {
-  if (!bkReady() || mode !== "live" || !navigator.onLine) return;
-  try { await cloudBackup("manual", label || "Before restore"); } catch (e) {}
-}
-/* once a day per account: a daily backup, keeping the newest seven */
-async function autoBackup() {
-  if (!bkReady() || mode !== "live" || !navigator.onLine || Date.now() - bk.checked < 36e5) return;
-  bk.checked = Date.now();
-  try {
-    const q = await bkCol().orderBy("created", "desc").limit(40).get();
-    const autos = q.docs.map(d => ({ id: d.id, ...d.data() })).filter(b => b.kind === "auto");
-    if (autos.length && Date.now() - autos[0].created < 20 * 36e5) return;
-    await cloudBackup("auto");
-    for (const old of autos.slice(6)) await deleteBackup(old.id);
-    bk.list = null; if (ui.tab === "more") render();
-  } catch (e) { bk.err = bkErr(e); }
-}
-function bkHtml() {
-  if (!AUTH) return "";
-  const head = `<h3 style="margin:6px 0 0;font-size:15px;font-family:var(--f-display)">Backups in your account</h3>`;
-  if (!USER) return head + `<p class="small muted">Sign in with your email to keep backups in your account. A backup is saved automatically every day and you can restore it on any device.</p><button class="btn" data-act="account" style="justify-self:start">Sign in or create account</button>`;
-  if (bk.list === null && !bk.busy) setTimeout(loadBackups, 0);
-  const when = ms => new Date(ms).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-  const size = n => n > 1e6 ? (n / 1e6).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1e3)) + " KB";
-  const rows = (bk.list || []).map(b => `<div class="li" data-bkrow="${b.id}"><span class="main"><span class="t" style="display:block">${when(b.created)}</span><span class="s" style="display:block">${b.kind === "auto" ? "Daily backup" : esc(b.label || "Saved by you")} · ${b.txCount} transactions · ${size(b.size)}</span></span><button class="ib" data-bkrestore="${b.id}">Restore</button><button class="ib del" data-bkdel="${b.id}">Delete</button></div>`).join("");
-  return head + `<p class="small muted">Saved to <b>${esc(USER.email || "your account")}</b>. A backup is made automatically once a day (the last 7 are kept), and you can save your own any time.</p>
-    ${bk.err === "rules" ? `<p class="notice">Backups are blocked by the Firebase security rules. Allow <code>takakoi/{uid}/backups</code> for the signed-in user.</p>` : bk.err === "net" ? `<p class="notice">Couldn't reach your account. Check your connection.</p>` : ""}
-    <div class="toolbar" style="margin:0"><button class="btn pri" data-act="bknow">Back up now</button></div>
-    ${bk.list === null ? `<p class="small muted">Loading backups…</p>` : rows ? `<div class="list">${rows}</div>` : `<p class="small muted">No backups yet.</p>`}`;
 }
 
 /* ---------- events ---------- */
@@ -1766,26 +1465,11 @@ document.addEventListener("click", e => {
   if (h("[data-delgrp]", b => { S.meta.groups = S.meta.groups.filter(g => g.id !== b.dataset.delgrp); markDirty("meta"); render(); })) return;
   if (h("[data-onb]", b => { const a = acctById(b.dataset.onb); a.onBudget = !a.onBudget; markDirty("meta"); render(); toast(a.onBudget ? "Now a budget account" : "Now a tracking account"); })) return;
   if (h("[data-closeacct]", b => { const a = acctById(b.dataset.closeacct); a.closed = !a.closed; markDirty("meta"); render(); toast(a.closed ? "Account closed" : "Account reopened"); })) return;
-  if (h("[data-bkrestore]", b => { const row = b.closest("[data-bkrow]"), id = b.dataset.bkrestore; row.querySelector(".main").insertAdjacentHTML("afterend", `<div class="confirm">Replace your budget?<button class="btn danger small" data-bkyes="${id}">Restore</button><button class="btn small" data-bkno>Cancel</button></div>`); row.querySelectorAll("[data-bkrestore],[data-bkdel]").forEach(x => x.remove()); })) return;
-  if (h("[data-bkdel]", b => { const row = b.closest("[data-bkrow]"), id = b.dataset.bkdel; row.querySelector(".main").insertAdjacentHTML("afterend", `<div class="confirm">Delete this backup?<button class="btn danger small" data-bkdelyes="${id}">Delete</button><button class="btn small" data-bkno>Cancel</button></div>`); row.querySelectorAll("[data-bkrestore],[data-bkdel]").forEach(x => x.remove()); })) return;
-  if (h("[data-bkno]", () => render())) return;
-  if (h("[data-bkyes]", async b => {
-    b.disabled = true; b.textContent = "Restoring…";
-    try { const d = await readBackup(b.dataset.bkyes); await backupBeforeReplace(); replaceAll({ meta: d.meta, tx: d.tx }); bk.list = null; toast("Backup restored"); }
-    catch (e) { toast("Couldn't restore that backup. Check your connection."); render(); }
-  })) return;
-  if (h("[data-bkdelyes]", async b => {
-    b.disabled = true;
-    try { await deleteBackup(b.dataset.bkdelyes); bk.list = (bk.list || []).filter(x => x.id !== b.dataset.bkdelyes); toast("Backup deleted"); } catch (e) { toast("Couldn't delete it. Check your connection."); }
-    render();
-  })) return;
   const act = el.closest("[data-act]")?.dataset.act;
   switch (act) {
     case "mprev": ui.month = addM(ui.month, -1); render(); break;
     case "mnext": ui.month = addM(ui.month, 1); render(); break;
-    case "newlend": iouSheet(null, "lent"); break;
-    case "newborrow": iouSheet(null, "borrowed"); break;
-    case "newtx": if (ui.tab === "accounts" && !ui.acct && ui.accView === "ious") { iouSheet(null, "lent"); break; } txSheet(null, { acct: ui.acct && acctById(ui.acct) ? ui.acct : ui.tab === "transactions" && ui.tf.acct ? ui.tf.acct : undefined }); break;
+    case "newtx": if (ui.tab === "accounts" && !ui.acct && ui.accView === "ious") { txSheet(null, { kind: "iou", ik: "lent" }); break; } txSheet(null, { acct: ui.acct && acctById(ui.acct) ? ui.acct : ui.tab === "transactions" && ui.tf.acct ? ui.tf.acct : undefined }); break;
     case "auto": {
       const m = ui.month, B = budget(m); const a = S.meta.assigned[m] ??= {}; let tot = 0;
       for (const c of allCats()) { if (c.hidden) continue; const n = need(c, B.rows[c.id], m); if (n && n.under > 0) { a[c.id] = (a[c.id] || 0) + n.under; tot += n.under; } }
@@ -1805,31 +1489,13 @@ document.addEventListener("click", e => {
     case "more": ui.limit += 150; render(); break;
     case "addgrp": { const i = $("#newgrp"); const n = i.value.trim(); if (!n) { i.focus(); break; } S.meta.groups.push({ id: rid(), name: n, cats: [] }); markDirty("meta"); render(); toast("Group added"); break; }
     case "export": exportSheet(); break;
-    case "xlsxout": exportXLSX(); break;
-    case "xlsxin": xlsxImportSheet(); break;
-    case "bknow": {
-      if (!bkReady()) break;
-      if (!navigator.onLine) { toast("You're offline. Back up when you're connected."); break; }
-      const b = el.closest("button"); b.disabled = true; b.textContent = "Backing up…";
-      cloudBackup("manual").then(() => { toast("Backup saved to your account"); loadBackups(); }, e => { bk.err = bkErr(e); toast(bk.err === "rules" ? "Backups aren't allowed by the Firebase rules yet." : "Couldn't save the backup. Check your connection."); render(); });
-      break;
-    }
     case "import": importSheet(); break;
     case "erase": $("#eraseBox").innerHTML = `<div class="confirm">Erase every account, transaction and category?<button class="btn danger small" data-act="eraseyes">Erase</button><button class="btn small" data-act="eraseno">Cancel</button></div>`; break;
     case "eraseno": render(); break;
-    case "eraseyes": backupBeforeReplace("Before erase").then(() => { replaceAll(blank()); toast("All data erased"); }); break;
+    case "eraseyes": replaceAll(blank()); toast("All data erased"); break;
   }
 });
-document.addEventListener("keydown", e => {
-  if (e.key === "Escape" && !$("#sheetRoot").hidden) { closeSheet(); return; }
-  /* desktop shortcuts, only when not typing and no sheet is open */
-  if (e.ctrlKey || e.metaKey || e.altKey || !$("#sheetRoot").hidden || !S) return;
-  const tg = e.target; if (tg.closest && tg.closest("input,select,textarea,[contenteditable]")) return;
-  if (e.key === "n" || e.key === "N") { e.preventDefault(); $("[data-act=newtx]")?.click(); }
-  else if (e.key === "/") { const q = $("#q"); if (q) { e.preventDefault(); q.focus(); } }
-  else if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && (ui.tab === "budget" || ui.tab === "reports")) { e.preventDefault(); ui.month = addM(ui.month, e.key === "ArrowLeft" ? -1 : 1); render(); }
-  else if (e.key >= "1" && e.key <= "5") { ui.tab = ["budget", "transactions", "accounts", "reports", "more"][+e.key - 1]; ui.acct = null; ui.q = ""; ui.limit = 150; render(); scrollTo(0, 0); }
-});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#sheetRoot").hidden) closeSheet(); });
 document.addEventListener("input", e => { if (e.target.id === "q") { ui.q = e.target.value; const pos = e.target.selectionStart; render(); const q = $("#q"); q.focus(); q.setSelectionRange(pos, pos); } });
 document.addEventListener("change", e => {
   const t = e.target;
@@ -1852,31 +1518,6 @@ document.addEventListener("change", e => {
 /* ---------- boot ---------- */
 S = example(); mode = "example"; render();
 connect();
-
-/* app shortcut "Add transaction" (?new=tx): open the sheet once the real budget has loaded */
-let wantNew = new URLSearchParams(location.search).get("new") === "tx";
-if (wantNew) { try { history.replaceState(null, "", location.pathname); } catch (e) {} }
-(function openWhenReady(tries) {
-  if (!wantNew) return;
-  const ready = store === "local" ? !AUTH || authKnown : store !== "pending" && gotFirst;
-  if (ready && $("#sheetRoot").hidden) { wantNew = false; txSheet(null); return; }
-  if (tries < 50) setTimeout(() => openWhenReady(tries + 1), 200);
-})(0);
-
-/* phones suspend backgrounded apps: save straight away instead of waiting for the debounce */
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden") { if (dirty.size && store !== "pending") { clearTimeout(flushTimer); flush(); } return; }
-  /* an app left open overnight still thinks it's yesterday; reload when idle so Today and the month are right */
-  if (localISO(new Date()) !== TODAY && !dirty.size && !flushing && $("#sheetRoot").hidden) { location.reload(); return; }
-  autoBackup();
-});
-addEventListener("pagehide", () => { if (dirty.size && store === "local") lsSet("et-data", JSON.stringify(S)); });
-addEventListener("online", renderTop); addEventListener("offline", renderTop);
-
-/* installable web app: cache the app so it opens offline (hosted site only) */
-if ("serviceWorker" in navigator && !window.claude && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
-  addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
-}
 })();
 </script>
 
