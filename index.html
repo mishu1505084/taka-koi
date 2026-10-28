@@ -214,8 +214,11 @@ button.li:hover{background:var(--sunk)}
 .wdays p{margin:8px 0 0}
 .hbar.time .track{height:12px}
 .hbar .sub{color:var(--muted);font-weight:500}
-.ratenote{display:flex;align-items:center;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
-.ratenote span{flex:1}
+.earn{margin-top:16px;padding-top:12px;border-top:1px solid var(--line);display:grid;gap:10px}
+.earn h4{margin:0;font-size:13px;font-weight:700}
+.earn .seg button{padding:7px 6px}
+.earn .rate{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.earn .rate span{flex:1}
 .chart{width:100%;height:auto;display:block;margin-top:10px}
 .chart text{fill:var(--muted);font-size:10px;font-family:var(--f-num)}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
@@ -1092,8 +1095,8 @@ function hourRate() {
 }
 function rateSrc(R) {
   const w = workCfg();
-  if (R.src === "hourly") return "From the hourly income you entered";
-  if (R.src === "daily") return `From ${fmt(w.rate)} a day ÷ ${w.hpd} hours`;
+  if (R.src === "hourly") return "From the hourly earnings you entered";
+  if (R.src === "daily") return `From ${fmt(w.rate)} a workday ÷ ${w.hpd} hours`;
   return `From ${mLabel(R.s.m)} ${R.s.kind === "salary" ? "salary" : "income"} ${fmt(R.s.amt)} ÷ ${w.dpm} days ÷ ${w.hpd} hrs${w.mode !== "auto" ? " (no " + w.mode + " income entered yet)" : ""}`;
 }
 function workTime(c, R) {
@@ -1142,10 +1145,13 @@ function vReports() {
     const pm = mShort(addM(ui.month, -1)), diff = tot - prev;
     const toggle = `<div class="seg" role="group" aria-label="Show spending as"><button data-spmode="money" class="${time ? "" : "on"}" aria-pressed="${!time}">৳ Taka</button><button data-spmode="time" class="${time ? "on" : ""}" aria-pressed="${time}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Time</button></div>`;
     const bigStyle = `font-family:var(--f-display);font-weight:800;font-size:28px`;
+    const earn = `<div class="earn"><h4>Work out my time from</h4>
+      <div class="seg" role="group" aria-label="Earnings basis">${[["auto", "Salary"], ["hourly", "Per hour"], ["daily", "Per workday"]].map(([k, l]) => `<button data-wmode="${k}" class="${W.mode === k ? "on" : ""}" aria-pressed="${W.mode === k}">${l}</button>`).join("")}</div>
+      ${W.mode !== "auto" ? `<label class="field">${W.mode === "hourly" ? "Earnings per working hour" : "Earnings per workday"}<input id="work-amt" class="num" inputmode="decimal" value="${W.rate ? plain(W.rate) : ""}" placeholder="0"></label>` : ""}
+      <div class="rate"><span>${R ? `≈ <b class="num" style="color:var(--ink)">${fmt(Math.round(R.r / 100) * 100)}</b> per hour · <b class="num" style="color:var(--ink)">${fmt(Math.round(R.r * W.hpd / 100) * 100)}</b> per workday<br>${esc(rateSrc(R))}` : W.mode === "auto" ? "No salary found in recent months. Record it under the Salary income category, or pick Per hour or Per workday." : "Enter an amount to see your spending as time."}</span><button class="btn small" data-act="gowork">Hours &amp; days</button></div></div>`;
     if (time && !R) {
       body = `<div class="card"><div class="rep-head"><h3>Work it took</h3>${toggle}</div>
-        <p class="small muted" style="margin:12px 0">No salary found yet, so there is nothing to turn spending into hours with.</p>
-        <button class="btn small" data-act="gowork">Add your income</button></div>`;
+        <p class="small muted" style="margin:12px 0 0">Tell Taka Koi what you earn to see spending as hours or workdays.</p>${earn}</div>`;
     } else if (time) {
       const hrs = tot / R.r, days = hrs / W.hpd, r1 = v => v < 10 ? Math.round(v * 10) / 10 : Math.round(v);
       /* one tick per hour or workday; widen the tick when it would be too thin to see */
@@ -1161,7 +1167,7 @@ function vReports() {
           <div class="cells" style="grid-template-columns:repeat(${cols},minmax(0,1fr))" aria-hidden="true">${cells}</div>
           <p>${pct > 100 ? "Spending was more than a whole month of work." : `Spending used ${pct}% of a month of work. You kept the rest.`}</p></div>` : ""}
         ${rows.map(r => { const p = Math.min(100, step / r.v * 100); return `<div class="hbar time"><span>${esc(lbl(r.c))}</span><span class="num"><b>${workTimeIn(r.v, R, unit)}</b><span class="sub"> · ${fmt(r.v)}</span></span><span class="track"><i style="width:${Math.max(2, r.v / max * 100)}%;background:repeating-linear-gradient(90deg,var(--hi) 0 calc(${p}% - 2px),transparent calc(${p}% - 2px) ${p}%)"></i></span></div>`; }).join("") || `<div class="empty">No spending this month.</div>`}
-        <div class="ratenote"><span>Your time ≈ <b class="num" style="color:var(--ink)">${fmt(Math.round(R.r / 100) * 100)}</b>/hr · ${esc(rateSrc(R))}${k > 1 ? ` · each block is ${k} ${unit === "days" ? "workdays" : "hrs"}` : ""}</span><button class="btn small" data-act="gowork">Change</button></div></div>`;
+        ${k > 1 ? `<p class="cap" style="margin:10px 0 0">Each block is ${k} ${unit === "days" ? "workdays" : "hours"}.</p>` : ""}${earn}</div>`;
     } else {
     body = `<div class="card"><div class="rep-head"><h3>Spent in ${mLabel(ui.month)}</h3>${toggle}</div><div class="big num" style="${bigStyle}">${fmt(tot)}</div>
       <p class="cap">${prev ? (tot >= prev ? `${fmt(tot - prev)} more than ${pm}` : `${fmt(prev - tot)} less than ${pm}`) : "No spending last month to compare"}</p>
@@ -1222,8 +1228,8 @@ function vMore() {
   <h2 class="sec">Storage</h2><div class="card" style="display:grid;gap:6px"><div id="syncline"></div><p>${storeMsg}</p>${AUTH ? `<button class="btn ${USER ? "" : "pri"}" data-act="account" style="justify-self:start">${USER ? "Account" : "Sign in or create account"}</button>` : ""}</div>
   ${(() => { const W = workCfg(), R = hourRate(); return `<h2 class="sec" id="work">Work time</h2><div class="card" style="display:grid;gap:12px">
     <p class="small muted">See what you spend as hours or days of work. Leave the income empty to use last month's salary.</p>
-    <div class="seg">${[["auto", "Last month's salary"], ["hourly", "Hourly"], ["daily", "Daily"]].map(([k, l]) => `<button data-wmode="${k}" class="${W.mode === k ? "on" : ""}">${l}</button>`).join("")}</div>
-    ${W.mode !== "auto" ? `<label class="field">${W.mode === "hourly" ? "Income per hour" : "Income per day"}<input id="work-amt" class="num" inputmode="decimal" value="${W.rate ? plain(W.rate) : ""}" placeholder="0"></label>` : ""}
+    <div class="seg">${[["auto", "Last month's salary"], ["hourly", "Per hour"], ["daily", "Per workday"]].map(([k, l]) => `<button data-wmode="${k}" class="${W.mode === k ? "on" : ""}">${l}</button>`).join("")}</div>
+    ${W.mode !== "auto" ? `<label class="field">${W.mode === "hourly" ? "Earnings per working hour" : "Earnings per workday"}<input id="work-amt" class="num" inputmode="decimal" value="${W.rate ? plain(W.rate) : ""}" placeholder="0"></label>` : ""}
     <div class="grid2"><label class="field">Hours per workday<input id="work-hpd" class="num" inputmode="decimal" value="${W.hpd}"></label><label class="field">Workdays per month<input id="work-dpm" class="num" inputmode="numeric" value="${W.dpm}"></label></div>
     <div style="background:var(--sunk);border-radius:12px;padding:10px 12px;font-size:14px">${R ? `Your time ≈ <b class="num">${fmt(Math.round(R.r / 100) * 100)}</b> per hour · <b class="num">${fmt(Math.round(R.r * W.hpd / 100) * 100)}</b> per workday<br><span class="small muted">${esc(rateSrc(R))}</span>` : `<span class="muted">No salary found in recent months. Enter an hourly or daily income, or record your salary under the Salary income category.</span>`}</div>
     <label class="toggle">Show on Budget tab<input id="work-budget" type="checkbox" ${W.budget ? "checked" : ""}></label>
