@@ -199,6 +199,23 @@ button.li:hover{background:var(--sunk)}
 .hbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;margin-top:12px;font-size:13px}
 .hbar .track{grid-column:1/3;height:8px;background:var(--sunk);border-radius:4px;overflow:hidden}
 .hbar .track i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.rep-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.rep-head .seg{flex:none}
+.rep-head .seg button{padding:7px 12px;display:flex;align-items:center;gap:5px}
+.rep-head .seg svg{width:14px;height:14px}
+.unitpick{display:flex;align-items:center;gap:6px;margin-top:12px;font-size:12px;color:var(--muted)}
+.unitpick button{border:1px solid var(--line);background:var(--surface);border-radius:999px;min-height:32px;padding:0 12px;font-weight:600;font-size:12px;color:var(--muted)}
+.unitpick button.on{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.wdays{margin-top:14px;background:var(--hi-soft);border-radius:14px;padding:12px;font-size:12px;color:var(--ink)}
+.wdays .wd-top{display:flex;justify-content:space-between;gap:10px;font-weight:700}
+.wdays .cells{display:grid;gap:4px;margin-top:8px}
+.wdays .cells i{display:block;height:20px;border-radius:5px;background:var(--surface);overflow:hidden}
+.wdays .cells i b{display:block;height:100%;background:var(--hi)}
+.wdays p{margin:8px 0 0}
+.hbar.time .track{height:12px}
+.hbar .sub{color:var(--muted);font-weight:500}
+.ratenote{display:flex;align-items:center;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.ratenote span{flex:1}
 .chart{width:100%;height:auto;display:block;margin-top:10px}
 .chart text{fill:var(--muted);font-size:10px;font-family:var(--f-num)}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
@@ -419,7 +436,7 @@ let S = null;            // { meta, tx: { "YYYY-MM": [tx] } }
 let mode = "example";    // example | live
 let store = "pending";   // pending | db (Claude) | cloud (email login) | local
 let syncState = "idle";  // idle | busy | err
-const ui = { tab: "budget", accView: "accounts", tf: { acct: "", month: "", type: "" }, month: CUR, acct: null, report: "spending", q: "", limit: 150, collapsed: new Set(JSON.parse(lsGet("et-collapsed") || "[]")) };
+const ui = { tab: "budget", accView: "accounts", tf: { acct: "", month: "", type: "" }, month: CUR, acct: null, report: "spending", spMode: lsGet("et-spmode") === "time" ? "time" : "money", spUnit: lsGet("et-spunit") === "hours" ? "hours" : "days", q: "", limit: 150, collapsed: new Set(JSON.parse(lsGet("et-collapsed") || "[]")) };
 
 function defaultGroups() {
   const g = (name, cats) => ({ id: rid(), name, cats: cats.map(c => ({ id: rid(), name: c[0], target: c[1] || null, hidden: false })) });
@@ -1087,6 +1104,14 @@ function workTime(c, R) {
   const d = h / w.hpd, v = d < 10 ? Math.round(d * 10) / 10 : Math.round(d);
   return v + (v === 1 ? " workday" : " workdays");
 }
+/* like workTime, but always in the unit the reports picker asks for */
+function workTimeIn(c, R, unit) {
+  if (!R || !(R.r > 0) || !(c > 0)) return unit === "days" ? "0 workdays" : "0 hrs";
+  const w = workCfg(), h = c / R.r, r1 = v => v < 10 ? Math.round(v * 10) / 10 : Math.round(v);
+  if (unit === "days") { const v = r1(h / w.hpd); return v + (v === 1 ? " workday" : " workdays"); }
+  if (h < 1) return Math.max(1, Math.round(h * 60)) + " min";
+  const v = r1(h); return v + (v === 1 ? " hr" : " hrs");
+}
 
 function spendByCat(m) {
   const I = index(), a = I.act[m] || {}; const out = [];
@@ -1113,10 +1138,36 @@ function vReports() {
     const prev = spendByCat(addM(ui.month, -1)).reduce((s, r) => s + r.v, 0);
     const max = rows[0]?.v || 1;
     const groupTot = {}; rows.forEach(r => groupTot[r.g.name] = (groupTot[r.g.name] || 0) + r.v);
-    body = `<div class="card"><h3>Spent in ${mLabel(ui.month)}</h3><div class="big num" style="font-family:var(--f-display);font-weight:800;font-size:28px">${fmt(tot)}</div>
-      <p class="cap">${prev ? (tot >= prev ? `${fmt(tot - prev)} more than ${mShort(addM(ui.month, -1))}` : `${fmt(prev - tot)} less than ${mShort(addM(ui.month, -1))}`) : "No spending last month to compare"}</p>
+    const R = hourRate(), W = workCfg(), time = ui.spMode === "time", unit = ui.spUnit;
+    const pm = mShort(addM(ui.month, -1)), diff = tot - prev;
+    const toggle = `<div class="seg" role="group" aria-label="Show spending as"><button data-spmode="money" class="${time ? "" : "on"}" aria-pressed="${!time}">৳ Taka</button><button data-spmode="time" class="${time ? "on" : ""}" aria-pressed="${time}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Time</button></div>`;
+    const bigStyle = `font-family:var(--f-display);font-weight:800;font-size:28px`;
+    if (time && !R) {
+      body = `<div class="card"><div class="rep-head"><h3>Work it took</h3>${toggle}</div>
+        <p class="small muted" style="margin:12px 0">No salary found yet, so there is nothing to turn spending into hours with.</p>
+        <button class="btn small" data-act="gowork">Add your income</button></div>`;
+    } else if (time) {
+      const hrs = tot / R.r, days = hrs / W.hpd, r1 = v => v < 10 ? Math.round(v * 10) / 10 : Math.round(v);
+      /* one tick per hour or workday; widen the tick when it would be too thin to see */
+      const base = unit === "days" ? W.hpd * R.r : R.r, k = [1, 2, 5, 10, 20, 50, 100].find(k => k * base / max >= 0.025) || 100, step = k * base;
+      const ncell = Math.max(1, Math.round(W.dpm)), cols = ncell <= 16 ? ncell : Math.ceil(ncell / 2);
+      const cells = Array.from({ length: ncell }, (_, i) => `<i><b style="width:${Math.max(0, Math.min(1, days - i)) * 100}%"></b></i>`).join("");
+      const pct = Math.round(days / W.dpm * 100);
+      body = `<div class="card"><div class="rep-head"><h3>Work it took</h3>${toggle}</div>
+        <div class="big num" style="${bigStyle};margin-top:4px">${tot ? workTimeIn(tot, R, unit) : "No time"}</div>
+        <p class="cap">${fmt(tot)} spent${prev ? ` · ${workTimeIn(Math.abs(diff), R, unit)} ${diff >= 0 ? "more" : "less"} than ${pm}` : ""}</p>
+        <div class="unitpick"><span>Count in</span><button data-spunit="hours" class="${unit === "hours" ? "on" : ""}">Hours</button><button data-spunit="days" class="${unit === "days" ? "on" : ""}">Workdays</button></div>
+        ${rows.length ? `<div class="wdays"><div class="wd-top"><span>Your ${mLabel(ui.month)} workdays</span><span class="num">${unit === "days" ? `${r1(days)} of ${r1(W.dpm)} days` : `${r1(hrs)} of ${r1(W.dpm * W.hpd)} hrs`}</span></div>
+          <div class="cells" style="grid-template-columns:repeat(${cols},minmax(0,1fr))" aria-hidden="true">${cells}</div>
+          <p>${pct > 100 ? "Spending was more than a whole month of work." : `Spending used ${pct}% of a month of work. You kept the rest.`}</p></div>` : ""}
+        ${rows.map(r => { const p = Math.min(100, step / r.v * 100); return `<div class="hbar time"><span>${esc(lbl(r.c))}</span><span class="num"><b>${workTimeIn(r.v, R, unit)}</b><span class="sub"> · ${fmt(r.v)}</span></span><span class="track"><i style="width:${Math.max(2, r.v / max * 100)}%;background:repeating-linear-gradient(90deg,var(--hi) 0 calc(${p}% - 2px),transparent calc(${p}% - 2px) ${p}%)"></i></span></div>`; }).join("") || `<div class="empty">No spending this month.</div>`}
+        <div class="ratenote"><span>Your time ≈ <b class="num" style="color:var(--ink)">${fmt(Math.round(R.r / 100) * 100)}</b>/hr · ${esc(rateSrc(R))}${k > 1 ? ` · each block is ${k} ${unit === "days" ? "workdays" : "hrs"}` : ""}</span><button class="btn small" data-act="gowork">Change</button></div></div>`;
+    } else {
+    body = `<div class="card"><div class="rep-head"><h3>Spent in ${mLabel(ui.month)}</h3>${toggle}</div><div class="big num" style="${bigStyle}">${fmt(tot)}</div>
+      <p class="cap">${prev ? (tot >= prev ? `${fmt(tot - prev)} more than ${pm}` : `${fmt(prev - tot)} less than ${pm}`) : "No spending last month to compare"}</p>
       ${rows.length ? `<div class="legend">${Object.entries(groupTot).map(([n, v]) => `<span>${esc(n)} <b class="num">${Math.round(v / tot * 100)}%</b></span>`).join("")}</div>` : ""}
       ${rows.map(r => `<div class="hbar"><span>${esc(lbl(r.c))}</span><span class="num">${fmt(r.v)}</span><span class="track"><i style="width:${Math.max(2, r.v / max * 100)}%"></i></span></div>`).join("") || `<div class="empty">No spending this month.</div>`}</div>`;
+    }
   } else if (ui.report === "flow") {
     const ms = Array.from({ length: 6 }, (_, i) => addM(ui.month, i - 5)), d = ms.map(m => ({ m, ...monthFlow(m) }));
     const mx = niceMax(Math.max(...d.map(x => Math.max(x.inc, x.sp))));
@@ -1893,6 +1944,8 @@ document.addEventListener("click", e => {
   const av = el.closest("[data-accview]"); if (av) { ui.accView = av.dataset.accview; render(); return; }
   const io = el.closest("[data-iou]"); if (io) { iouSheet(io.dataset.iou); return; }
   const wm = el.closest("[data-wmode]"); if (wm) { workCfg().mode = wm.dataset.wmode; markDirty("meta"); render(); return; }
+  const spm = el.closest("[data-spmode]"); if (spm) { ui.spMode = spm.dataset.spmode; lsSet("et-spmode", ui.spMode); render(); return; }
+  const spu = el.closest("[data-spunit]"); if (spu) { ui.spUnit = spu.dataset.spunit; lsSet("et-spunit", ui.spUnit); render(); return; }
   const rep = el.closest("[data-rep]"); if (rep) { ui.report = rep.dataset.rep; render(); return; }
   const h = (sel, fn) => { const b = el.closest(sel); if (b) { fn(b); return true; } return false; };
   if (h("[data-mv]", b => {
