@@ -1,6 +1,6 @@
 /* Taka Koi? service worker: opens offline, keeps the page fresh when online.
    Bump VERSION when the app shell files change. */
-const VERSION = "tk-v6";
+const VERSION = "tk-v7";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"];
 /* third-party static files that are safe to keep: Firebase SDK, Google Fonts, the Excel library */
 const STATIC_HOSTS = ["www.gstatic.com", "fonts.googleapis.com", "fonts.gstatic.com", "cdnjs.cloudflare.com"];

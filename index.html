@@ -1086,6 +1086,17 @@ function lastSalary() {
   for (const m of order) { const v = sum(m, t => isIncome(t.cat)); if (v > 0) return { m, amt: v, kind: "income" }; }
   return null;
 }
+/* switching between per hour and per workday converts the amount with hours per workday, so the rate stays the same */
+function setWorkMode(mode) {
+  const w = workCfg();
+  if (mode === "hourly" || mode === "daily") {
+    const from = w.rateUnit || (w.mode !== "auto" ? w.mode : null);
+    if (w.rate > 0 && from && from !== mode) w.rate = Math.round(mode === "daily" ? w.rate * w.hpd : w.rate / w.hpd);
+    else if (!(w.rate > 0)) { const R = hourRate(); if (R) w.rate = Math.round((mode === "daily" ? R.r * w.hpd : R.r) / 100) * 100; }
+    w.rateUnit = mode;
+  }
+  w.mode = mode;
+}
 function hourRate() {
   const w = workCfg();
   if (w.mode === "hourly" && w.rate > 0) return { r: w.rate, src: "hourly" };
@@ -1949,7 +1960,7 @@ document.addEventListener("click", e => {
   const clr = el.closest("[data-clr]"); if (clr) { const f = findTx(clr.dataset.clr); if (f && !f.t.rec) { f.t.cleared = !f.t.cleared; markDirty("tx-" + f.m); render(); } else if (f) toast("Reconciled transactions are locked. Open it to edit."); return; }
   const av = el.closest("[data-accview]"); if (av) { ui.accView = av.dataset.accview; render(); return; }
   const io = el.closest("[data-iou]"); if (io) { iouSheet(io.dataset.iou); return; }
-  const wm = el.closest("[data-wmode]"); if (wm) { workCfg().mode = wm.dataset.wmode; markDirty("meta"); render(); return; }
+  const wm = el.closest("[data-wmode]"); if (wm) { setWorkMode(wm.dataset.wmode); markDirty("meta"); render(); return; }
   const spm = el.closest("[data-spmode]"); if (spm) { ui.spMode = spm.dataset.spmode; lsSet("et-spmode", ui.spMode); render(); return; }
   const spu = el.closest("[data-spunit]"); if (spu) { ui.spUnit = spu.dataset.spunit; lsSet("et-spunit", ui.spUnit); render(); return; }
   const rep = el.closest("[data-rep]"); if (rep) { ui.report = rep.dataset.rep; render(); return; }
@@ -2038,7 +2049,7 @@ document.addEventListener("change", e => {
   if (t.dataset.gname) { const g = S.meta.groups.find(x => x.id === t.dataset.gname); const v = t.value.trim(); if (v) { g.name = v; markDirty("meta"); } else t.value = g.name; return; }
   if (t.dataset.cname) { const c = catById(t.dataset.cname); const v = t.value.trim(); if (v) { c.name = v; markDirty("meta"); } else t.value = c.name; return; }
   if (t.dataset.aname) { const a = acctById(t.dataset.aname); const v = t.value.trim(); if (v) { a.name = v; markDirty("meta"); } else t.value = a.name; return; }
-  if (t.id === "work-amt") { const v = parseAmt(t.value); workCfg().rate = v && v > 0 ? v : 0; markDirty("meta"); render(); return; }
+  if (t.id === "work-amt") { const v = parseAmt(t.value), w = workCfg(); w.rate = v && v > 0 ? v : 0; w.rateUnit = w.mode; markDirty("meta"); render(); return; }
   if (t.id === "work-hpd") { const v = parseFloat(t.value); workCfg().hpd = v > 0 && v <= 24 ? Math.round(v * 10) / 10 : 8; markDirty("meta"); render(); return; }
   if (t.id === "work-dpm") { const v = parseInt(t.value, 10); workCfg().dpm = v > 0 && v <= 31 ? v : 22; markDirty("meta"); render(); return; }
   if (t.id === "work-budget") { workCfg().budget = t.checked; markDirty("meta"); render(); return; }
