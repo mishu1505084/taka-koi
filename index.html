@@ -185,12 +185,14 @@ button.li:hover{background:var(--sunk)}
 
 /* tabs */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--surface);border-top:1px solid var(--line);padding:6px max(10px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px))}
-.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:center}
+.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));align-items:center}
 .tabs button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;font-weight:600;color:var(--muted);padding:6px 0;white-space:nowrap;letter-spacing:-.01em;min-width:0}
 .tabs button.on{color:var(--accent)}
 .tabs svg{width:22px;height:22px}
 .tabs .add{justify-self:center;width:52px;height:52px;border-radius:16px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;margin-top:-22px;box-shadow:var(--shadow)}
 .tabs .add svg{width:26px;height:26px}
+.tabs .ts{display:none}
+@media (max-width:419px){.tabs .tl{display:none}.tabs .ts{display:inline}.tabs button{font-size:10px}}
 
 /* reports */
 .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px}
@@ -199,6 +201,24 @@ button.li:hover{background:var(--sunk)}
 .hbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;margin-top:12px;font-size:13px}
 .hbar .track{grid-column:1/3;height:8px;background:var(--sunk);border-radius:4px;overflow:hidden}
 .hbar .track i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.home-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 4px 10px}
+.home-hero{background:var(--accent);color:var(--accent-ink);border-radius:20px;padding:18px 18px 16px}
+.home-hero .lbl{font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;opacity:.85}
+.home-hero .big{font-family:var(--f-display);font-weight:800;font-size:34px;letter-spacing:-.03em;line-height:1.1;margin-top:2px}
+.home-hero .sub{font-size:13px;opacity:.9;margin-top:2px}
+.home-hero .list{margin-top:14px;background:var(--surface);color:var(--ink);border:0}
+.home-hero .bar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:12px;gap:2px;background:rgba(255,255,255,.18)}
+.home-hero .bar i{display:block;height:100%;background:var(--accent-ink);opacity:.85}
+.home-hero .bar i:nth-child(2n){opacity:.55}
+.home-card{margin-top:12px}
+.home-card .row2{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.home-card .amt{font-family:var(--f-display);font-weight:800;font-size:24px;letter-spacing:-.02em}
+.hc-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--line)}
+.hc-row:first-child{border-top:0}
+.hc-row .toggle{flex:1;min-width:0}
+.hc-row .mv{width:40px;height:40px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--muted);display:grid;place-items:center}
+.hc-row .mv:disabled{opacity:.35}
+.hc-row .mv svg{width:16px;height:16px}
 .rep-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .rep-head .seg{flex:none}
 .rep-head .seg button{padding:7px 12px;display:flex;align-items:center;gap:5px}
@@ -439,7 +459,7 @@ let S = null;            // { meta, tx: { "YYYY-MM": [tx] } }
 let mode = "example";    // example | live
 let store = "pending";   // pending | db (Claude) | cloud (email login) | local
 let syncState = "idle";  // idle | busy | err
-const ui = { tab: "budget", accView: "accounts", tf: { acct: "", month: "", type: "" }, month: CUR, acct: null, report: "spending", spMode: lsGet("et-spmode") === "time" ? "time" : "money", spUnit: lsGet("et-spunit") === "hours" ? "hours" : "days", q: "", limit: 150, collapsed: new Set(JSON.parse(lsGet("et-collapsed") || "[]")) };
+const ui = { tab: "home", accView: "accounts", tf: { acct: "", month: "", type: "" }, month: CUR, acct: null, report: "spending", spMode: lsGet("et-spmode") === "time" ? "time" : "money", spUnit: lsGet("et-spunit") === "hours" ? "hours" : "days", q: "", limit: 150, collapsed: new Set(JSON.parse(lsGet("et-collapsed") || "[]")) };
 
 function defaultGroups() {
   const g = (name, cats) => ({ id: rid(), name, cats: cats.map(c => ({ id: rid(), name: c[0], target: c[1] || null, hidden: false })) });
@@ -727,6 +747,7 @@ function putTx(t) { const m = ymOf(t.date); (S.tx[m] ??= []).push(t); return "tx
 /* minimal taka coin: reeded rim, inner ring, ৳ at centre */
 const COIN = `<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15" fill="var(--hi)"/><circle cx="16" cy="16" r="15" fill="none" stroke="var(--hi-ink)" stroke-opacity=".35" stroke-width="1.6" stroke-dasharray="1.2 1.6"/><circle cx="16" cy="16" r="11.2" fill="none" stroke="var(--hi-ink)" stroke-opacity=".55" stroke-width="1"/><text x="16" y="21.6" text-anchor="middle" font-size="15" font-weight="700" fill="var(--hi-ink)" font-family="'Noto Sans Bengali','Hind Siliguri','Nirmala UI','Vrinda',system-ui,sans-serif">৳</text></svg>`;
 const ICONS = {
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 11l8-6 8 6v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/></svg>',
   budget: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 8l9 6 9-6"/></svg>',
   accounts: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 10h16M5 10l7-5 7 5M6 10v7M10 10v7M14 10v7M18 10v7M4 19h16"/></svg>',
   add: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
@@ -737,7 +758,7 @@ const ICONS = {
 function renderTabs() {
   const b = (k, l) => `<button data-tab="${k}" class="${ui.tab === k ? "on" : ""}" aria-label="${l}">${ICONS[k]}${l}</button>`;
   $("#tabs").innerHTML = `<div class="side-brand dk">${COIN}<span>Taka Koi<em>?</em></span></div>`
-    + b("budget", "Budget") + b("transactions", "Transactions") + `<button class="add" data-act="newtx" aria-label="Add transaction" title="Add transaction (N)">${ICONS.add}<span class="dk">Add transaction</span></button>` + b("accounts", "Accounts") + b("reports", "Reports")
+    + b("home", "Home") + b("budget", "Budget") + b("transactions", "Transactions").replace(">Transactions<", '><span class="tl">Transactions</span><span class="ts">Txns</span><') + `<button class="add" data-act="newtx" aria-label="Add transaction" title="Add transaction (N)">${ICONS.add}<span class="dk">Add transaction</span></button>` + b("accounts", "Accounts") + b("reports", "Reports")
     + `<button data-tab="more" class="side-more dk ${ui.tab === "more" ? "on" : ""}" aria-label="More: settings, categories, backup">${ICONS.more}Settings${syncState === "err" ? ` <span style="color:var(--bad)">●</span>` : ""}</button>`
     + `<p class="keys dk"><kbd>N</kbd> add transaction<br><kbd>/</kbd> search · <kbd>←</kbd> <kbd>→</kbd> month</p>`;
 }
@@ -752,7 +773,7 @@ function renderTop() {
   else if (store === "db" || store === "cloud") { sc = "ok"; st = "Synced"; }
   else if (store === "local") { sc = "ok"; st = "This browser"; }
   else { st = "Loading"; }
-  const TITLES = { budget: "Budget", transactions: "Transactions", accounts: "Accounts", reports: "Reports", more: "Settings" };
+  const TITLES = { home: "Home", budget: "Budget", transactions: "Transactions", accounts: "Accounts", reports: "Reports", more: "Settings" };
   $("#top").innerHTML = `<button class="menu mb ${ui.tab === "more" ? "on" : ""}" data-tab="more" aria-label="More: settings, categories, backup" title="More">${ICONS.more}${syncState === "err" ? "<i></i>" : ""}</button><div class="brand mb">${COIN}<span>Taka Koi<em>?</em></span></div><h1 class="ptitle">${TITLES[ui.tab] || ""}</h1>
     ${showMonth ? `<div class="month"><button data-act="mprev" aria-label="Previous month">‹</button><span>${mLabel(ui.month)}</span><button data-act="mnext" aria-label="Next month">›</button></div>` : ""}
     ${AUTH ? (USER ? `<button class="acctbtn me" data-act="account" aria-label="Account: ${esc(USER.email || "")}" title="${esc(USER.email || "")}">${esc((USER.email || "?").slice(0, 1).toUpperCase())}</button>` : `<button class="acctbtn" data-act="account">Sign in</button>`) : ""}`;
@@ -764,13 +785,90 @@ function render() {
   renderTop(); renderTabs();
   const v = $("#view");
   queueMicrotask(renderTop);
-  v.innerHTML = ui.tab === "budget" ? vBudget() : ui.tab === "accounts" ? vAccounts() : ui.tab === "reports" ? vReports() : ui.tab === "transactions" ? vTransactions() : vMore();
+  v.innerHTML = ui.tab === "home" ? vHome() : ui.tab === "budget" ? vBudget() : ui.tab === "accounts" ? vAccounts() : ui.tab === "reports" ? vReports() : ui.tab === "transactions" ? vTransactions() : vMore();
 }
 
 function exampleBanner() {
   if (mode !== "example") return "";
   return `<div class="banner"><p><strong>This is an example budget.</strong> Explore it, then start your own. Nothing is saved until you change something.</p>
     <div class="row"><button class="btn pri small" data-act="fresh">Start my own budget</button><button class="btn small" data-act="keep">Keep the example</button></div></div>`;
+}
+/* home: a page of cards the user picks and orders; settings live in meta.home so they sync */
+const HOME_CARDS = [["accts", "Money in budget accounts"], ["rta", "Ready to Assign"], ["spent", "Spent this month"], ["over", "Overspent categories"], ["networth", "Net worth"], ["recent", "Recent transactions"]];
+const HOME_ON = ["accts", "rta", "spent"];
+function homeCfg() {
+  const h = S.meta.home ||= {};
+  if (!Array.isArray(h.cards)) h.cards = HOME_CARDS.map(([id]) => ({ id, on: HOME_ON.includes(id) }));
+  h.cards = h.cards.filter(c => HOME_CARDS.some(([id]) => id === c.id));
+  HOME_CARDS.forEach(([id]) => { if (!h.cards.some(c => c.id === id)) h.cards.push({ id, on: false }); });
+  if (!Array.isArray(h.hide)) h.hide = [];
+  return h;
+}
+function vHome() {
+  const H = homeCfg(), { b, cl } = balances(), B = budget(CUR), W = workCfg(), R = hourRate();
+  const on = S.meta.accounts.filter(a => a.onBudget && !a.closed), shown = on.filter(a => !H.hide.includes(a.id));
+  const sum = l => l.reduce((s, a) => s + (b[a.id] || 0), 0);
+  const cards = {
+    accts() {
+      const tot = sum(shown), clr = shown.reduce((s, a) => s + (cl[a.id] || 0), 0), pos = shown.filter(a => (b[a.id] || 0) > 0), pt = pos.reduce((s, a) => s + b[a.id], 0);
+      const row = a => `<button class="li" data-acct="${a.id}"><span class="ico">${esc(a.name.slice(0, 2).toUpperCase())}</span><span class="main"><span class="t" style="display:block">${esc(a.name)}</span><span class="s" style="display:block">${esc(a.type)}${pos.length > 1 && (b[a.id] || 0) > 0 ? ` · ${Math.round(b[a.id] / pt * 100)}%` : ""}</span></span><span class="amt num ${(b[a.id] || 0) < 0 ? "neg" : ""}">${fmt(b[a.id] || 0)}</span></button>`;
+      return `<section class="home-hero"><div class="lbl">Money in budget accounts</div><div class="big num">${fmt(tot)}</div>
+        <div class="sub">${shown.length ? `${shown.length} account${shown.length > 1 ? "s" : ""}${shown.length < on.length ? ` of ${on.length} shown` : ""} · cleared <span class="num">${fmt(clr)}</span>` : "No budget accounts yet"}</div>
+        ${pos.length > 1 ? `<div class="bar" aria-hidden="true">${pos.map(a => `<i style="flex:${b[a.id] / pt}"></i>`).join("")}</div>` : ""}
+        ${shown.length ? `<div class="list">${shown.map(row).join("")}</div>` : `<div class="list"><div class="empty">Add the accounts you spend from: bank, bKash, cash, card. <button class="btn small" data-act="addacct">Add account</button></div></div>`}</section>`;
+    },
+    rta() {
+      return `<div class="card home-card"><div class="row2"><div><h3>Ready to Assign</h3><div class="amt num" style="color:${B.rta < 0 ? "var(--bad)" : "var(--ink)"}">${fmt(B.rta)}</div><p class="cap">${B.rta > 0 ? "Give these taka a job" : B.rta < 0 ? "You assigned more than you have" : "Every taka has a job"} · ${mLabel(CUR)}</p></div><button class="btn small" data-tab="budget">Budget</button></div></div>`;
+    },
+    spent() {
+      const rows = spendByCat(CUR), tot = rows.reduce((s, r) => s + r.v, 0), max = rows[0]?.v || 1, wt = R ? workTime(tot, R) : "";
+      return `<div class="card home-card"><div class="row2"><div><h3>Spent in ${mLabel(CUR)}</h3><div class="amt num">${fmt(tot)}</div>${wt ? `<p class="cap">About ${wt} of work</p>` : ""}</div><button class="btn small" data-act="homerep">Reports</button></div>
+        ${rows.slice(0, 3).map(r => `<div class="hbar"><span>${esc(lbl(r.c))}</span><span class="num">${fmt(r.v)}</span><span class="track"><i style="width:${Math.max(2, r.v / max * 100)}%"></i></span></div>`).join("") || `<p class="small muted" style="margin:8px 0 0">No spending yet this month.</p>`}</div>`;
+    },
+    over() {
+      const list = []; S.meta.groups.forEach(g => g.cats.forEach(c => { const r = B.rows[c.id]; if (r && r.available < 0) list.push({ c, v: -r.available }); }));
+      return `<div class="card home-card"><h3>Overspent categories</h3>${list.length ? `<div class="list" style="margin-top:10px">${list.sort((x, y) => y.v - x.v).map(x => `<button class="li" data-cat="${x.c.id}"><span class="main"><span class="t" style="display:block">${esc(lbl(x.c))}</span></span><span class="amt num neg">${fmt(-x.v)}</span></button>`).join("")}</div>` : `<p class="small muted" style="margin:6px 0 0">Nothing is overspent in ${mLabel(CUR)}.</p>`}</div>`;
+    },
+    networth() {
+      const off = S.meta.accounts.filter(a => !a.onBudget && !a.closed);
+      return `<div class="card home-card"><div class="row2"><div><h3>Net worth</h3><div class="amt num">${fmt(sum(S.meta.accounts))}</div><p class="cap">Budget <span class="num">${fmt(sum(on))}</span> · Tracking <span class="num">${fmt(sum(off))}</span></p></div><button class="btn small" data-act="homenw">Trend</button></div></div>`;
+    },
+    recent() {
+      const list = allTx().filter(t => t.date <= TODAY).sort((x, y) => x.date < y.date ? 1 : x.date > y.date ? -1 : 0).slice(0, 5);
+      return `<div class="card home-card"><div class="row2"><h3>Recent transactions</h3><button class="btn small" data-act="gotx">All</button></div>${list.length ? `<div class="list" style="margin-top:10px">${list.map(t => `<button class="li" data-tx="${t.id}"><span class="main"><span class="t" style="display:block">${esc(t.payee || "No payee")}</span><span class="s" style="display:block">${dLabel(t.date)} · ${esc(acctById(t.acct)?.name || "")}</span></span><span class="amt num ${t.amount > 0 ? "in" : ""}">${fmt(t.amount, { sign: true })}</span></button>`).join("")}</div>` : `<p class="small muted" style="margin:6px 0 0">No transactions yet.</p>`}</div>`;
+    }
+  };
+  const body = H.cards.filter(c => c.on).map(c => cards[c.id]()).join("");
+  return exampleBanner() + `<div class="home-top"><span class="small muted">${new Date().toLocaleDateString(S.meta.locale || "en-IN", { weekday: "long", day: "numeric", month: "long" })}</span><button class="btn small" data-act="homecfg">Customize</button></div>`
+    + (body || `<div class="card"><p class="small muted" style="margin:0 0 10px">Your Home is empty. Pick the cards you want to see.</p><button class="btn pri small" data-act="homecfg">Customize Home</button></div>`);
+}
+function homeSheet() {
+  const UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>', DN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+  const draw = () => {
+    const H = homeCfg(), name = id => HOME_CARDS.find(c => c[0] === id)[1], on = S.meta.accounts.filter(a => a.onBudget && !a.closed);
+    return shead("Customize Home") + `<p class="small muted" style="margin:0 0 6px">Turn cards on or off and move them up or down.</p>
+      <div>${H.cards.map((c, i) => `<div class="hc-row"><label class="toggle">${esc(name(c.id))}<input type="checkbox" data-hcard="${c.id}" ${c.on ? "checked" : ""}></label>
+        <button class="mv" data-hmove="${i}:-1" aria-label="Move ${esc(name(c.id))} up" ${i === 0 ? "disabled" : ""}>${UP}</button><button class="mv" data-hmove="${i}:1" aria-label="Move ${esc(name(c.id))} down" ${i === H.cards.length - 1 ? "disabled" : ""}>${DN}</button></div>`).join("")}</div>
+      ${on.length ? `<p style="margin:18px 0 0;font-weight:700;font-size:14px">Accounts in “Money in budget accounts”</p><div>${on.map(a => `<div class="hc-row"><label class="toggle">${esc(a.name)}<input type="checkbox" data-hacct="${a.id}" ${H.hide.includes(a.id) ? "" : "checked"}></label></div>`).join("")}</div>` : ""}
+      <button class="btn pri" data-close style="width:100%;margin-top:16px">Done</button>`;
+  };
+  const redraw = () => { const el = $("#sheetRoot .sheet"); if (el) el.innerHTML = '<div class="grab"></div>' + draw(); };
+  const save = () => { markDirty("meta"); render(); redraw(); };
+  openSheet(draw(), el => {
+    el.addEventListener("click", e => {
+      const mv = e.target.closest("[data-hmove]"); if (!mv) return;
+      const [i, d] = mv.dataset.hmove.split(":").map(Number), c = homeCfg().cards, j = i + d;
+      if (j < 0 || j >= c.length) return;
+      [c[i], c[j]] = [c[j], c[i]]; save();
+      const f = $(`#sheetRoot [data-hmove="${j}:${d}"]`) || $(`#sheetRoot [data-hmove="${j}:${-d}"]`); if (f) f.focus();
+    });
+    el.addEventListener("change", e => {
+      const H = homeCfg(), hc = e.target.closest("[data-hcard]"), ha = e.target.closest("[data-hacct]");
+      if (hc) { H.cards.find(c => c.id === hc.dataset.hcard).on = hc.checked; save(); }
+      else if (ha) { const id = ha.dataset.hacct; H.hide = ha.checked ? H.hide.filter(x => x !== id) : [...H.hide, id]; save(); }
+    });
+  });
+  sheetRefresh = redraw;
 }
 function vBudget() {
   const m = ui.month, B = budget(m);
@@ -2009,6 +2107,9 @@ document.addEventListener("click", e => {
     case "toggletxwork": { const W = workCfg(); W.tx = !W.tx; markDirty("meta"); render(); toast(W.tx ? "Showing work time" : "Work time hidden"); break; }
     case "tfclear": ui.tf = { acct: "", month: "", type: "" }; ui.q = ""; ui.limit = 150; render(); break;
     case "acctback": ui.acct = null; ui.q = ""; render(); break;
+    case "homecfg": homeSheet(); break;
+    case "homerep": ui.tab = "reports"; ui.report = "spending"; ui.month = CUR; render(); scrollTo(0, 0); break;
+    case "homenw": ui.tab = "reports"; ui.report = "networth"; ui.month = CUR; render(); scrollTo(0, 0); break;
     case "addacct": acctSheet(); break;
     case "reconcile": reconcileSheet(ui.acct); break;
     case "more": ui.limit += 150; render(); break;
