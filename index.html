@@ -427,6 +427,7 @@ const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","D
 const mLabel = ym => MN[+ym.slice(5) - 1] + " " + ym.slice(0, 4);
 const mShort = ym => MN[+ym.slice(5) - 1];
 const dayDiff = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 864e5);
+const addD = (d, n) => { const x = new Date(d + "T12:00:00"); x.setDate(x.getDate() + n); return localISO(x); };
 function dLabel(d) {
   if (d === TODAY) return "Today";
   const y = localISO(new Date(Date.now() - 864e5)); if (d === y) return "Yesterday";
@@ -530,13 +531,17 @@ function example() {
     a[C["Clothing"]] = i === 1 ? 500000 : 150000; a[C["Travel"]] = 300000;
     if (m === CUR) { delete a[C["Travel"]]; a[C["Groceries"]] = 1000000; }
   });
+  const tripId = rid(), tday = d => m1 + "-" + z2(d);
+  const trips = [{ id: tripId, name: "Cox's Bazar weekend", start: tday(14), end: tday(16), budget: 1500000 }];
+  [[14, A.bkash, "Green Line bus", "Travel", 240000], [14, A.card, "Hotel Sea Crown", "Travel", 650000], [15, A.cash, "Poushee restaurant", "Dining out", 180000], [15, A.cash, "Beach bike ride", "Hobbies", 60000], [16, A.cash, "Burmese market", "Clothing", 95000], [16, A.bkash, "Green Line bus", "Travel", 240000]]
+    .forEach(([d, acct, payee, cat, amt]) => put({ date: tday(d), acct, payee, cat: C[cat], amount: -amt, trip: tripId }));
   const ious = [
     { id: rid(), kind: "lent", person: "Rahim", amount: 500000, date: m1 + "-12", due: addM(CUR, 1) + "-10", note: "Bike repair", acct: null, closed: false, payments: [{ id: rid(), date: CUR + "-05", amount: 200000 }] },
     { id: rid(), kind: "lent", person: "Office colleague", amount: 150000, date: m0 + "-20", due: m1 + "-15", note: "Lunch and cab", acct: null, closed: false, payments: [] },
     { id: rid(), kind: "borrowed", person: "Tanvir", amount: 300000, date: CUR + "-09", due: null, note: "Concert tickets", acct: null, closed: false, payments: [] },
     { id: rid(), kind: "lent", person: "Rahim", amount: 100000, date: m0 + "-03", due: null, note: "Cricket match tickets", acct: null, closed: false, payments: [{ id: rid(), date: m0 + "-28", amount: 100000 }] },
   ];
-  return { meta: { v: 1, currency: "৳", locale: "en-IN", groups, accounts, assigned, payees: { "shwapno": C["Groceries"], "pathao": C["Transport"], "landlord": C["Rent"], "employer salary": IC["Salary"], "freelance project": IC["Freelance"] }, ious, incomeCats, showEmoji: true, work: { mode: "auto", rate: 0, hpd: 8, dpm: 22, budget: true, tx: false } }, tx };
+  return { meta: { v: 1, currency: "৳", locale: "en-IN", groups, accounts, assigned, payees: { "shwapno": C["Groceries"], "pathao": C["Transport"], "landlord": C["Rent"], "employer salary": IC["Salary"], "freelance project": IC["Freelance"] }, ious, trips, incomeCats, showEmoji: true, work: { mode: "auto", rate: 0, hpd: 8, dpm: 22, budget: true, tx: false } }, tx };
 }
 
 /* ---------- derived data ---------- */
@@ -763,7 +768,7 @@ function renderTabs() {
 }
 function renderTop() {
   if (!S) return;
-  const showMonth = ui.tab === "budget" || ui.tab === "reports";
+  const showMonth = ui.tab === "budget" || (ui.tab === "reports" && ui.report !== "trips");
   let sc = "", st = "";
   if (mode === "example") { st = "Example"; }
   else if ((store === "cloud" || store === "db") && !navigator.onLine) { sc = "busy"; st = dirty.size || flushing ? "Offline · will sync" : "Offline"; }
@@ -793,13 +798,13 @@ function exampleBanner() {
     <div class="row"><button class="btn pri small" data-act="fresh">Start my own budget</button><button class="btn small" data-act="keep">Keep the example</button></div></div>`;
 }
 /* home: a page of cards the user picks and orders; settings live in meta.home so they sync */
-const HOME_CARDS = [["accts", "Money in budget accounts"], ["rta", "Ready to Assign"], ["spent", "Spent this month"], ["over", "Overspent categories"], ["networth", "Net worth"], ["recent", "Recent transactions"]];
-const HOME_ON = ["accts", "rta", "spent"];
+const HOME_CARDS = [["trip", "Current trip (while one is ongoing)"], ["accts", "Money in budget accounts"], ["rta", "Ready to Assign"], ["spent", "Spent this month"], ["over", "Overspent categories"], ["networth", "Net worth"], ["recent", "Recent transactions"]];
+const HOME_ON = ["trip", "accts", "rta", "spent"];
 function homeCfg() {
   const h = S.meta.home ||= {};
   if (!Array.isArray(h.cards)) h.cards = HOME_CARDS.map(([id]) => ({ id, on: HOME_ON.includes(id) }));
   h.cards = h.cards.filter(c => HOME_CARDS.some(([id]) => id === c.id));
-  HOME_CARDS.forEach(([id]) => { if (!h.cards.some(c => c.id === id)) h.cards.push({ id, on: false }); });
+  HOME_CARDS.forEach(([id]) => { if (!h.cards.some(c => c.id === id)) h.cards[id === "trip" ? "unshift" : "push"]({ id, on: id === "trip" }); });
   if (!Array.isArray(h.hide)) h.hide = [];
   return h;
 }
@@ -808,6 +813,12 @@ function vHome() {
   const on = S.meta.accounts.filter(a => a.onBudget && !a.closed), shown = on.filter(a => !H.hide.includes(a.id));
   const sum = l => l.reduce((s, a) => s + (b[a.id] || 0), 0);
   const cards = {
+    trip() {
+      const x = tripFor(TODAY); if (!x) return "";
+      const st = tripStats(x), left = x.budget ? x.budget - st.net : 0;
+      return `<div class="card home-card"><div class="row2"><div><h3>✈ ${esc(x.name)}</h3><div class="amt num">${fmt(st.net)}</div><p class="cap">Day ${st.days} · <span class="num">${fmt(Math.round(st.net / st.days / 100) * 100)}</span> a day${x.budget ? ` · <span style="color:${left < 0 ? "var(--bad)" : "inherit"}">${left < 0 ? "over by" : "left"} <span class="num">${fmt(Math.abs(left))}</span></span>` : ""}</p></div><button class="btn small" data-trip="${x.id}">Open</button></div>
+        ${x.budget ? `<span class="bar ${left < 0 ? "bad" : ""}" style="display:block;margin-top:10px"><i style="width:${Math.min(100, Math.round(st.net / x.budget * 100))}%"></i></span>` : ""}</div>`;
+    },
     accts() {
       const tot = sum(shown), clr = shown.reduce((s, a) => s + (cl[a.id] || 0), 0), pos = shown.filter(a => (b[a.id] || 0) > 0), pt = pos.reduce((s, a) => s + b[a.id], 0);
       const row = a => `<button class="li" data-acct="${a.id}"><span class="ico">${esc(a.name.slice(0, 2).toUpperCase())}</span><span class="main"><span class="t" style="display:block">${esc(a.name)}</span><span class="s" style="display:block">${esc(a.type)}${pos.length > 1 && (b[a.id] || 0) > 0 ? ` · ${Math.round(b[a.id] / pt * 100)}%` : ""}</span></span><span class="amt num ${(b[a.id] || 0) < 0 ? "neg" : ""}">${fmt(b[a.id] || 0)}</span></button>`;
@@ -929,24 +940,25 @@ function txRow(t) {
   const a = acctById(t.acct);
   const wtx = ui.tab === "transactions" && workCfg().tx && t.amount < 0 && !t.xfer ? workTime(-t.amount, hourRate()) : "";
   const catTxt = t.xfer ? (t.cat ? catName(t.cat) : "Transfer") : (t.cat ? catName(t.cat) : "Uncategorized");
-  const showAcct = ui.tab === "transactions" || ui.acct === "all" || ui.acct === "uncat";
+  const showAcct = ui.tab === "transactions" || ui.tab === "reports" || ui.acct === "all" || ui.acct === "uncat";
   let title, sub, icoTxt;
   if (ui.tab === "transactions") {
     /* category leads; payee, account and memo sit underneath */
     const o = t.xfer ? null : (catById(t.cat) || incById(t.cat));
     const plainCat = o ? o.name : t.cat === "income" ? "Income" : catTxt;
     title = `<span style="${t.cat || t.xfer ? "" : "color:var(--warn)"}">${esc(plainCat)}</span>`;
-    sub = (showAdj() && isAdj(t) ? `<span class="tag fix">Correction</span>` : "") + [t.payee || "No payee", a?.name, t.memo].filter(Boolean).map(esc).join(" · ");
+    sub = (showAdj() && isAdj(t) ? `<span class="tag fix">Correction</span>` : "") + [t.payee || "No payee", a?.name, t.memo].filter(Boolean).map(esc).join(" · ") + tripTag(t);
     icoTxt = o && o.emoji && emojiOn() ? o.emoji : (o ? o.name : t.xfer ? "⇄" : "?").replace(/[^A-Za-z0-9ঀ-৿⇄?]/g, "").slice(0, 2).toUpperCase() || "•";
   } else {
     title = esc(t.payee || "No payee");
-    sub = (showAdj() && isAdj(t) ? `<span class="tag fix">Correction</span>` : "") + (t.xfer ? `Transfer · ${esc(a?.name || "")}` : `${esc(catTxt)}${showAcct ? " · " + esc(a?.name || "") : ""}`) + (t.memo ? " · " + esc(t.memo) : "");
+    sub = (showAdj() && isAdj(t) ? `<span class="tag fix">Correction</span>` : "") + (t.xfer ? `Transfer · ${esc(a?.name || "")}` : `${esc(catTxt)}${showAcct ? " · " + esc(a?.name || "") : ""}`) + (t.memo ? " · " + esc(t.memo) : "") + tripTag(t);
     icoTxt = (t.payee || "?").replace(/[^A-Za-z0-9ঀ-৿]/g, "").slice(0, 2).toUpperCase() || "•";
   }
   return `<div class="li"><button class="clr ${t.rec ? "lock" : t.cleared ? "on" : ""}" data-clr="${t.id}" aria-label="${t.rec ? "Reconciled" : t.cleared ? "Cleared" : "Not cleared"}" title="${t.rec ? "Reconciled" : "Tap to toggle cleared"}">${t.rec ? "🔒" : t.cleared ? "✓" : ""}</button>
     <button class="li" style="padding:0;border:0" data-tx="${t.id}"><span class="ico" style="${ui.tab === "transactions" ? "font-size:16px" : ""}">${esc(icoTxt)}</span><span class="main"><span class="t" style="display:block">${title}</span><span class="s" style="display:block">${sub}</span></span>
     <span class="amt num ${t.amount > 0 ? "in" : ""}">${fmt(t.amount, { sign: true })}${wtx ? `<span class="wt-s">⏱ ${wtx}</span>` : ""}</span></button></div>`;
 }
+const tripTag = t => { const x = t.trip && !(ui.tab === "reports" && ui.trip === t.trip) ? tripById(t.trip) : null; return x ? ` · ✈ ${esc(x.name)}` : ""; };
 function txList(list) {
   if (!list.length) return `<div class="empty">No transactions here yet.</div>`;
   list.sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
@@ -971,7 +983,7 @@ function vTransactions() {
   else if (f.type === "uncat") list = list.filter(t => I.onB.has(t.acct) && !t.cat && !t.xfer && t.amount < 0);
   else if (f.type === "uncleared") list = list.filter(t => !t.cleared);
   const q = ui.q.trim().toLowerCase();
-  if (q) list = list.filter(t => (t.payee || "").toLowerCase().includes(q) || catName(t.cat).toLowerCase().includes(q) || (t.memo || "").toLowerCase().includes(q) || plain(Math.abs(t.amount)).includes(q));
+  if (q) list = list.filter(t => (t.payee || "").toLowerCase().includes(q) || catName(t.cat).toLowerCase().includes(q) || (t.memo || "").toLowerCase().includes(q) || (tripById(t.trip)?.name || "").toLowerCase().includes(q) || plain(Math.abs(t.amount)).includes(q));
   const vis = list.filter(t => !isInternal(t));
   const inflow = vis.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0), outflow = vis.filter(t => t.amount < 0).reduce((s, t) => s + t.amount, 0);
   const months = [...new Set(allTx().map(t => ymOf(t.date)))].sort().reverse();
@@ -1030,6 +1042,19 @@ function vAccounts() {
 const iouPaid = e => (e.payments || []).reduce((s, p) => s + p.amount, 0);
 const iouLeft = e => e.amount - iouPaid(e);
 const iouOpen = e => !e.closed && iouLeft(e) > 0;
+/* trips: expenses tagged to a trip are seen on their own; they still count in their budget categories */
+const trips = () => S.meta.trips ||= [];
+const tripById = id => id ? trips().find(x => x.id === id) : null;
+const tripLive = (x, d = TODAY) => x.start <= d && (!x.end || d <= x.end);
+const tripFor = d => trips().filter(x => tripLive(x, d)).sort((a, b) => a.start < b.start ? 1 : -1)[0] || null;
+const tripDates = x => x.end ? (x.end === x.start ? dLabel(x.start) : `${dLabel(x.start)} – ${dLabel(x.end)}`) : `Since ${dLabel(x.start)}`;
+function tripStats(x) {
+  const l = allTx().filter(t => t.trip === x.id && !t.xfer), by = {};
+  let spent = 0, back = 0;
+  for (const t of l) { if (t.amount < 0) spent -= t.amount; else back += t.amount; by[t.cat || ""] = (by[t.cat || ""] || 0) - t.amount; }
+  const last = x.end && x.end < TODAY ? x.end : TODAY;
+  return { l, spent, back, net: spent - back, by, days: Math.max(1, dayDiff(x.start, last) + 1) };
+}
 function helperAcct(kind) {
   let a = S.meta.accounts.find(x => x.helper === kind);
   if (!a) { a = { id: rid(), name: kind === "lent" ? "Lent to people" : "Borrowed from people", type: kind === "lent" ? "receivable" : "loan", onBudget: false, closed: false, helper: kind }; S.meta.accounts.push(a); }
@@ -1241,10 +1266,77 @@ function monthFlow(m) {
 function netWorthAt(m) { const end = m + "-31"; let s = 0; for (const t of allTx()) if (t.date <= end) s += t.amount; return s; }
 function niceMax(v) { if (v <= 0) return 100; const p = Math.pow(10, Math.floor(Math.log10(v))); for (const k of [1, 2, 2.5, 5, 10]) if (k * p >= v) return k * p; return 10 * p; }
 const short = c => { const v = Math.abs(c) / 100; const s = v >= 1e7 ? (v / 1e7).toFixed(1) + "Cr" : v >= 1e5 ? (v / 1e5).toFixed(1) + "L" : v >= 1e3 ? (v / 1e3).toFixed(0) + "k" : v.toFixed(0); return (c < 0 ? "−" : "") + s.replace(".0", ""); };
+function vTrips() {
+  const x = tripById(ui.trip);
+  if (x) {
+    const st = tripStats(x), live = tripLive(x), up = x.start > TODAY;
+    const rows = Object.entries(st.by).filter(([, v]) => v > 0).map(([k, v]) => ({ k, v })).sort((a, b) => b.v - a.v), max = rows[0]?.v || 1;
+    const left = x.budget ? x.budget - st.net : 0;
+    return `<button class="back" data-act="tripback">‹ Trips</button>
+      <div class="acct-hero"><div class="small muted">✈ ${esc(x.name)} · ${esc(tripDates(x))}${live ? (x.end === TODAY ? " · last day" : " · ongoing") : up ? " · upcoming" : ""}</div>
+        <div class="big num">${fmt(st.net)}</div>
+        <div class="row"><span>${st.l.length} transaction${st.l.length === 1 ? "" : "s"}</span>${up ? "" : `<span>${st.days} day${st.days === 1 ? "" : "s"} · <b class="num">${fmt(Math.round(st.net / st.days / 100) * 100)}</b> a day</span>`}${st.back ? `<span>Refunds <b class="num">${fmt(st.back)}</b></span>` : ""}${x.budget ? `<span style="color:${left < 0 ? "var(--bad)" : "inherit"}">${left < 0 ? "Over by" : "Left"} <b class="num">${fmt(Math.abs(left))}</b> of ${fmt(x.budget)}</span>` : ""}</div>
+        ${x.budget ? `<span class="bar ${left < 0 ? "bad" : st.net > x.budget * .85 ? "warn" : ""}" style="display:block;margin-top:10px"><i style="width:${Math.min(100, Math.round(st.net / x.budget * 100))}%"></i></span>` : ""}</div>
+      <div class="toolbar"><button class="btn pri" data-act="tripadd">Add expense</button><button class="btn" data-act="tripedit">Edit trip</button>${live && !x.end ? `<button class="btn" data-act="tripend">End trip today</button>` : ""}</div>
+      ${rows.length ? `<div class="card" style="margin-top:12px"><h3>By category</h3><p class="cap">Still counted in these budget categories</p>${rows.map(r => `<div class="hbar"><span>${esc(r.k ? catName(r.k) : "Uncategorized")}</span><span class="num">${fmt(r.v)}</span><span class="track"><i style="width:${Math.max(2, r.v / max * 100)}%"></i></span></div>`).join("")}</div>` : ""}
+      ${st.l.length ? txList(st.l) : `<div class="empty">Nothing on this trip yet. Add an expense, or edit a transaction and pick this trip.</div>`}`;
+  }
+  ui.trip = null;
+  const all = trips().slice().sort((a, b) => a.start < b.start ? 1 : -1);
+  const row = x => { const st = tripStats(x), over = x.budget && st.net > x.budget; return `<button class="iou" data-trip="${x.id}">
+      <span class="t">✈ ${esc(x.name)}</span>
+      <span class="r"><span class="num amt" style="${over ? "color:var(--bad)" : ""}">${fmt(st.net)}</span><small>${x.budget ? "of " + fmt(x.budget) : st.l.length + " txn" + (st.l.length === 1 ? "" : "s")}</small></span>
+      <span class="s">${esc(tripDates(x))}${x.start > TODAY ? " · upcoming" : ` · ${st.days} day${st.days === 1 ? "" : "s"}`}</span>
+      ${x.budget ? `<span class="bar ${over ? "bad" : ""}"><i style="width:${Math.min(100, Math.round(st.net / x.budget * 100))}%"></i></span>` : ""}
+    </button>`; };
+  const now = all.filter(x => tripLive(x) || x.start > TODAY), past = all.filter(x => !tripLive(x) && x.start <= TODAY);
+  const yr = TODAY.slice(0, 4), yrTot = past.concat(now).filter(x => x.start.startsWith(yr)).reduce((s, x) => s + tripStats(x).net, 0);
+  return `<div class="acct-hero"><div class="small muted">Trips &amp; vacations</div><div class="big num">${fmt(yrTot)}</div>
+      <div class="row"><span>Spent on trips in ${yr}</span><span>${all.length} trip${all.length === 1 ? "" : "s"}</span></div></div>
+    <div class="toolbar"><button class="btn pri" data-act="newtrip">New trip</button></div>
+    <p class="small muted" style="margin:10px 4px 0">While a trip is ongoing, new expenses are tagged to it automatically. You can change the trip on any transaction. Trip spending still counts in your budget categories.</p>
+    ${now.length ? `<h2 class="sec">Ongoing &amp; upcoming</h2><div class="list">${now.map(row).join("")}</div>` : ""}
+    ${past.length ? `<h2 class="sec">Past trips</h2><div class="list">${past.map(row).join("")}</div>` : ""}
+    ${all.length ? "" : `<div class="empty" style="margin-top:12px">No trips yet. Start one when you leave for a vacation or a sudden trip, and its spending is kept together.</div>`}`;
+}
+function tripSheet(id) {
+  const x = tripById(id);
+  openSheet(`${shead(x ? "Edit trip" : "New trip")}
+    <label class="field">Name<input id="tr-name" value="${esc(x?.name || "")}" placeholder="e.g. Sylhet tea gardens, Eid trip home" autofocus></label>
+    <div class="grid2"><label class="field">Starts<input id="tr-start" type="date" value="${x?.start || TODAY}"></label><label class="field">Ends<input id="tr-end" type="date" value="${x?.end || ""}"></label></div>
+    <p class="small muted" style="margin-top:-6px">Leave the end date empty while you're still travelling.</p>
+    <label class="field">Trip budget (optional)<input id="tr-bud" class="num" inputmode="decimal" value="${x?.budget ? plain(x.budget) : ""}" placeholder="0"></label>
+    <label class="toggle"><span>Tag transactions already in these dates<br><span class="small muted">Expenses and income not on another trip</span></span><input id="tr-tag" type="checkbox"></label>
+    <button class="btn pri block" data-trsave>${x ? "Save trip" : "Start trip"}</button>
+    ${x ? `<div id="trdel"><button class="btn danger block" data-trdel>Delete trip</button></div>` : ""}`, el => {
+    el.addEventListener("click", e => {
+      if (e.target.closest("[data-trdel]")) { el.querySelector("#trdel").innerHTML = `<div class="confirm">Delete the trip? Its transactions stay, just untagged.<button class="btn danger small" data-tryes>Delete</button><button class="btn small" data-trno>Keep</button></div>`; return; }
+      if (e.target.closest("[data-trno]")) { el.querySelector("#trdel").innerHTML = `<button class="btn danger block" data-trdel>Delete trip</button>`; return; }
+      if (e.target.closest("[data-tryes]")) {
+        const keys = new Set(["meta"]); for (const [m, l] of Object.entries(S.tx)) for (const t of l) if (t.trip === x.id) { delete t.trip; keys.add("tx-" + m); }
+        S.meta.trips = trips().filter(y => y.id !== x.id); ui.trip = null; markDirty(...keys); closeSheet(); render(); toast("Trip deleted"); return;
+      }
+      if (!e.target.closest("[data-trsave]")) return;
+      const name = el.querySelector("#tr-name").value.trim(), start = el.querySelector("#tr-start").value || TODAY, end = el.querySelector("#tr-end").value || null;
+      if (!name) { toast("Give the trip a name."); el.querySelector("#tr-name").focus(); return; }
+      if (end && end < start) { toast("The trip can't end before it starts."); return; }
+      const raw = el.querySelector("#tr-bud").value.trim(), budget = raw ? parseAmt(raw) : null;
+      if (raw && (budget == null || budget < 0)) { toast("Budget should be a number."); return; }
+      const t = x || { id: rid() }; Object.assign(t, { name, start, end, budget: budget || null });
+      if (!x) trips().push(t);
+      const keys = new Set(["meta"]);
+      if (el.querySelector("#tr-tag").checked) for (const [m, l] of Object.entries(S.tx)) for (const tx of l) if (!tx.xfer && !tx.trip && tripLive(t, tx.date) && tx.date <= TODAY && tx.payee !== "Starting balance" && !isAdj(tx)) { tx.trip = t.id; keys.add("tx-" + m); }
+      ui.tab = "reports"; ui.report = "trips"; ui.trip = t.id;
+      markDirty(...keys); closeSheet(); render(); scrollTo(0, 0); toast(x ? "Trip saved" : `${name} started`);
+    });
+  });
+}
 function vReports() {
-  const seg = `<div class="seg" role="tablist">${[["spending", "Spending"], ["flow", "Cash flow"], ["networth", "Net worth"]].map(([k, l]) => `<button role="tab" data-rep="${k}" class="${ui.report === k ? "on" : ""}">${l}</button>`).join("")}</div>`;
+  if (ui.report === "trips" && ui.trip) return vTrips();
+  const seg = `<div class="seg" role="tablist">${[["spending", "Spending"], ["flow", "Cash flow"], ["networth", "Net worth"], ["trips", "Trips"]].map(([k, l]) => `<button role="tab" data-rep="${k}" class="${ui.report === k ? "on" : ""}">${l}</button>`).join("")}</div>`;
   let body = "";
-  if (ui.report === "spending") {
+  if (ui.report === "trips") body = vTrips();
+  else if (ui.report === "spending") {
     const rows = spendByCat(ui.month), tot = rows.reduce((s, r) => s + r.v, 0);
     const prev = spendByCat(addM(ui.month, -1)).reduce((s, r) => s + r.v, 0);
     const max = rows[0]?.v || 1;
@@ -1424,6 +1516,8 @@ function txSheet(id, preset = {}) {
       <div class="grid2"><label class="field">Date<input id="t-date" type="date" value="${TODAY}"></label><label class="field">Due by<input id="t-due" type="date"></label></div>
       <p class="small muted">Picking an account moves the money there too, so its balance stays right. See and change these under Accounts → Lent &amp; Owed.</p>`;
   };
+  let trip = ex ? ex.trip || "" : preset.trip || tripFor(TODAY)?.id || "", tripSet = !!(ex || preset.trip);
+  const tripOpts = () => `<option value="">Not on a trip</option>` + trips().filter(x => x.id === trip || !x.end || x.end >= addD(TODAY, -60)).sort((a, b) => a.start < b.start ? 1 : -1).map(x => `<option value="${x.id}" ${x.id === trip ? "selected" : ""}>✈ ${esc(x.name)}</option>`).join("");
   const draw = () => {
     const isX = kind === "xfer";
     return `${shead(ex ? "Edit transaction" : "New transaction")}
@@ -1434,7 +1528,8 @@ function txSheet(id, preset = {}) {
     : `<label class="field">Payee<input id="t-payee" list="payees" value="${esc(ex?.payee || "")}" placeholder="${kind === "in" ? "Employer, client…" : "Shop, person, company"}" autocomplete="off"></label>
       <datalist id="payees">${payees.map(p => `<option value="${esc(p)}"></option>`).join("")}</datalist>
       <label class="field">Category<select id="t-cat">${catOpts(ex ? ex.cat : (kind === "in" ? (S.meta.incomeCats?.[0]?.id || "income") : ""), true)}</select></label>
-      <label class="field">Account<select id="t-acct">${acctOpts(ex?.acct || preset.acct || firstAcct)}</select></label>`}
+      <label class="field">Account<select id="t-acct">${acctOpts(ex?.acct || preset.acct || firstAcct)}</select></label>
+      ${trips().length ? `<label class="field">Trip<select id="t-trip">${tripOpts()}</select></label>` : ""}`}
     ${kind === "iou" ? "" : `<div class="grid2"><label class="field">Date<input id="t-date" type="date" value="${ex?.date || TODAY}"></label><label class="field">Memo<input id="t-memo" value="${esc(ex?.memo || "")}" placeholder="Optional"></label></div>`}
     <label class="toggle" ${kind === "iou" ? "hidden" : ""}>Cleared with bank<input id="t-clr" type="checkbox" ${(ex ? ex.cleared : true) ? "checked" : ""}></label>
     ${ex?.rec ? `<p class="small muted">🔒 Reconciled. Editing it will change your reconciled balance.</p>` : ""}
@@ -1470,6 +1565,9 @@ function txSheet(id, preset = {}) {
     const f = el.querySelector("#t-from"), t = el.querySelector("#t-to"), w = el.querySelector("#t-xcatwrap");
     const upd = () => { if (!f) return; const a = acctById(f.value), b = acctById(t.value); w.hidden = !(a && b && a.onBudget !== b.onBudget); };
     if (f) { f.addEventListener("change", upd); t.addEventListener("change", upd); upd(); }
+    const tr = el.querySelector("#t-trip"), dt = el.querySelector("#t-date");
+    if (tr) tr.addEventListener("change", () => { trip = tr.value; tripSet = true; });
+    if (tr && dt) dt.addEventListener("change", () => { if (tripSet) return; trip = tripFor(dt.value || TODAY)?.id || ""; tr.innerHTML = tripOpts(); });
     const io = el.querySelector("#t-iou");
     if (io) {
       const sync = () => { const r = S.meta.ious.find(x => x.id === io.value); if (!r) return; const left = iouLeft(r);
@@ -1512,7 +1610,8 @@ function txSheet(id, preset = {}) {
       keys.push(putTx({ id: rid(), date, acct: ta, payee: "Transfer: " + A.name, cat: B.onBudget && mixed ? cat : null, amount: amt, memo, cleared, xfer: fa, xid }));
     } else {
       const payee = el.querySelector("#t-payee").value.trim(), cat = el.querySelector("#t-cat").value || null, acct = el.querySelector("#t-acct").value;
-      keys.push(putTx({ id: ex?.id || rid(), date, acct, payee, cat, amount: kind === "out" ? -amt : amt, memo, cleared, rec: rec && cleared }));
+      const tp = el.querySelector("#t-trip")?.value || null;
+      keys.push(putTx({ id: ex?.id || rid(), date, acct, payee, cat, amount: kind === "out" ? -amt : amt, memo, cleared, rec: rec && cleared, ...(tp ? { trip: tp } : {}) }));
       if (payee && cat && cat !== "income") { S.meta.payees[payee.toLowerCase()] = cat; keys.push("meta"); }
     }
     markDirty(...new Set(keys)); closeSheet(); render(); toast(ex ? "Saved" : "Transaction added");
@@ -1800,7 +1899,7 @@ async function exportXLSX() {
   const txRows = txs.map(t => {
     const c = catById(t.cat), ic = incById(t.cat), x = t.xfer ? acctById(t.xfer) : null;
     return [isoToSerial(t.date), acctById(t.acct)?.name || "", t.payee || "", c ? groupOf[c.id]?.name || "" : (ic || t.cat === "income") ? "Income" : "",
-      c ? c.name : ic ? ic.name : t.cat === "income" ? "Ready to Assign" : "", t.memo || "", money(t.amount), t.cleared ? "Yes" : "No", x ? x.name : ""];
+      c ? c.name : ic ? ic.name : t.cat === "income" ? "Ready to Assign" : "", t.memo || "", money(t.amount), t.cleared ? "Yes" : "No", x ? x.name : "", tripById(t.trip)?.name || ""];
   });
   const { b, cl } = balances();
   const acRows = S.meta.accounts.map(a => [a.name, a.type, a.onBudget ? "Budget" : "Tracking", a.closed ? "Closed" : "Open", money(b[a.id]), money(cl[a.id])]);
@@ -1812,7 +1911,7 @@ async function exportXLSX() {
   }
   const iRows = (S.meta.ious || []).map(e => [e.kind === "lent" ? "Lent" : "Borrowed", e.person, e.note || "", isoToSerial(e.date), e.due ? isoToSerial(e.due) : "", money(e.amount), money(iouPaid(e)), money(Math.max(0, iouLeft(e))), iouOpen(e) ? "Open" : "Settled"]);
   const wb = X.utils.book_new();
-  X.utils.book_append_sheet(wb, sheetOf(X, ["Date", "Account", "Payee", "Category group", "Category", "Memo", "Amount", "Cleared", "Transfer account"], txRows, { Date: "yyyy-mm-dd", Amount: XL_MONEY }), "Transactions");
+  X.utils.book_append_sheet(wb, sheetOf(X, ["Date", "Account", "Payee", "Category group", "Category", "Memo", "Amount", "Cleared", "Transfer account", "Trip"], txRows, { Date: "yyyy-mm-dd", Amount: XL_MONEY }), "Transactions");
   X.utils.book_append_sheet(wb, sheetOf(X, ["Account", "Type", "Used for", "Status", "Balance", "Cleared balance"], acRows, { Balance: XL_MONEY, "Cleared balance": XL_MONEY }), "Accounts");
   X.utils.book_append_sheet(wb, sheetOf(X, ["Month", "Group", "Category", "Assigned", "Activity", "Available"], bRows, { Assigned: XL_MONEY, Activity: XL_MONEY, Available: XL_MONEY }), "Budget");
   X.utils.book_append_sheet(wb, sheetOf(X, ["Type", "Person", "What for", "Date", "Due", "Amount", "Repaid", "Remaining", "Status"], iRows, { Date: "yyyy-mm-dd", Due: "yyyy-mm-dd", Amount: XL_MONEY, Repaid: XL_MONEY, Remaining: XL_MONEY }), "Lent & Owed");
@@ -2057,10 +2156,11 @@ document.addEventListener("click", e => {
   const clr = el.closest("[data-clr]"); if (clr) { const f = findTx(clr.dataset.clr); if (f && !f.t.rec) { f.t.cleared = !f.t.cleared; markDirty("tx-" + f.m); render(); } else if (f) toast("Reconciled transactions are locked. Open it to edit."); return; }
   const av = el.closest("[data-accview]"); if (av) { ui.accView = av.dataset.accview; render(); return; }
   const io = el.closest("[data-iou]"); if (io) { iouSheet(io.dataset.iou); return; }
+  const trp = el.closest("[data-trip]"); if (trp) { ui.tab = "reports"; ui.report = "trips"; ui.trip = trp.dataset.trip; ui.limit = 150; render(); scrollTo(0, 0); return; }
   const wm = el.closest("[data-wmode]"); if (wm) { setWorkMode(wm.dataset.wmode); markDirty("meta"); render(); return; }
   const spm = el.closest("[data-spmode]"); if (spm) { ui.spMode = spm.dataset.spmode; lsSet("et-spmode", ui.spMode); render(); return; }
   const spu = el.closest("[data-spunit]"); if (spu) { ui.spUnit = spu.dataset.spunit; lsSet("et-spunit", ui.spUnit); render(); return; }
-  const rep = el.closest("[data-rep]"); if (rep) { ui.report = rep.dataset.rep; render(); return; }
+  const rep = el.closest("[data-rep]"); if (rep) { ui.report = rep.dataset.rep; ui.trip = null; render(); return; }
   const h = (sel, fn) => { const b = el.closest(sel); if (b) { fn(b); return true; } return false; };
   if (h("[data-mv]", b => {
     const [k, id, d] = b.dataset.mv.split(":");
@@ -2089,9 +2189,15 @@ document.addEventListener("click", e => {
   })) return;
   const act = el.closest("[data-act]")?.dataset.act;
   switch (act) {
+    case "newtrip": tripSheet(); break;
+    case "tripedit": tripSheet(ui.trip); break;
+    case "tripback": ui.trip = null; render(); break;
+    case "tripadd": txSheet(null, { trip: ui.trip }); break;
+    case "tripend": { const x = tripById(ui.trip); if (x) { x.end = TODAY < x.start ? x.start : TODAY; markDirty("meta"); render(); toast(`${x.name} ended`); } break; }
     case "mprev": ui.month = addM(ui.month, -1); render(); break;
     case "mnext": ui.month = addM(ui.month, 1); render(); break;
-    case "newtx": if (ui.tab === "accounts" && !ui.acct && ui.accView === "ious") { txSheet(null, { kind: "iou", ik: "lent" }); break; } txSheet(null, { acct: ui.acct && acctById(ui.acct) ? ui.acct : ui.tab === "transactions" && ui.tf.acct ? ui.tf.acct : undefined }); break;
+    case "newtx": if (ui.tab === "accounts" && !ui.acct && ui.accView === "ious") { txSheet(null, { kind: "iou", ik: "lent" }); break; }
+      if (ui.tab === "reports" && ui.report === "trips" && tripById(ui.trip)) { txSheet(null, { trip: ui.trip }); break; } txSheet(null, { acct: ui.acct && acctById(ui.acct) ? ui.acct : ui.tab === "transactions" && ui.tf.acct ? ui.tf.acct : undefined }); break;
     case "auto": {
       const m = ui.month, B = budget(m); const a = S.meta.assigned[m] ??= {}; let tot = 0;
       for (const c of allCats()) { if (c.hidden) continue; const n = need(c, B.rows[c.id], m); if (n && n.under > 0) { a[c.id] = (a[c.id] || 0) + n.under; tot += n.under; } }
